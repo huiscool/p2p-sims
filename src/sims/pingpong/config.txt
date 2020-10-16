@@ -1,0 +1,24 @@
+
+# global settings
+random.seed 1234567890
+simulation.cycles 30
+
+control.shf Shuffle
+
+network.size 2
+
+protocol.lnk IdleProtocol
+
+protocol.pingpong sims.pingpong.Pingpong
+protocol.pingpong.linkable lnk
+
+init.rnd WireKOut
+init.rnd.protocol lnk
+init.rnd.k 2
+
+init.init sims.pingpong.Initializer
+init.init.first 0
+init.init.protocol pingpong
+
+control.audience sims.pingpong.Audience
+control.audience.protocol pingpong

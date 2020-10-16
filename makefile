@@ -8,7 +8,7 @@ build:
 download:
 	rm -rf lib
 	wget -O $(zipname) https://sourceforge.net/projects/peersim/files/peersim-1.0.5.zip/download
-	unzip $(zipname) 
+	unzip $(zipname) "*.jar"
 	mv $(basename $(zipname)) lib
 	rm $(zipname)
 

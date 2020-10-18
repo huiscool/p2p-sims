@@ -1,0 +1,46 @@
+# PEERSIM EXAMPLE 1
+
+#random.seed 12345678
+
+simulation.cycles 2000
+simulation.experiments 10
+
+control.shf Shuffle
+
+network.size 10000
+ 
+protocol.lnk jiahaoliu.example.broadcasttree.EagerLazyLink
+protocol.lnk.eagercapacity 5
+protocol.lnk.lazycapacity 1
+protocol.lnk.passivecap 10
+
+
+protocol.broadcast jiahaoliu.example.broadcasttree.BroadcastRule
+#avg协议没有自己的邻居管理协议，需要通过参数linkable来指定
+protocol.broadcast.linkable lnk
+protocol.broadcast.k 1
+
+
+init.rnd WireKOut
+init.rnd.protocol lnk
+init.rnd.k 5
+
+init.trigger jiahaoliu.example.broadcasttree.MsgBroadcastInitializer
+init.trigger.protocol broadcast
+init.trigger.resultnum 1000
+#节点出度
+init.trigger.k 10
+init.trigger.rootk 3
+
+
+# you can change this to select the peak initializer instead
+include.init rnd trigger
+
+control.broadcasto jiahaoliu.example.broadcasttree.BroadcastObserver
+control.broadcasto.protocol broadcast
+control.broadcasto.resetlink rnd
+
+control.msgcollecto jiahaoliu.example.broadcasttree.ResultTransferObserver
+control.msgcollecto.protocol broadcast
+control.msgcollecto.downpeers 0
+

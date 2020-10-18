@@ -12,5 +12,9 @@ download:
 	mv $(basename $(zipname)) lib
 	rm $(zipname)
 
-run:
+pingpong:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/pingpong/config.txt
+
+tree:
+	java -cp $(LIB_JARS):classes peersim.Simulator src/jiahaoliu/example/broadcasttree/config-treebroadcast.txt
+

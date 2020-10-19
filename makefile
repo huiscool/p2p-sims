@@ -2,6 +2,7 @@ zipname=peersim-1.0.5.zip
 LIB_JARS=`find -L lib/ -name "*.jar" | tr [:space:] :`
 
 build:
+	rm -rf classes
 	mkdir -p classes
 	javac -sourcepath src -classpath $(LIB_JARS) -d classes `find -L . -name "*.java"`
 
@@ -16,5 +17,5 @@ pingpong:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/pingpong/config.txt
 
 tree:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/jiahaoliu/example/broadcasttree/config-treebroadcast.txt
+	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/broadcasttree/config.txt
 

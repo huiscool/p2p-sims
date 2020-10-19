@@ -1,6 +1,5 @@
 package sims.broadcasttree;
 
-import sims.broadcasttree.Util.FileOperator;
 import sims.broadcasttree.model.QueryResult;
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
@@ -129,7 +128,7 @@ public class BroadcastRule implements CDProtocol {
                 .min(Comparator.comparingInt(x -> ((EagerLazyLink) x.getProtocol(FastConfig.getLinkable(protocolID))).getLazyPeers().size())).get();
         if (minLazyPeersNode == null) {
             //TODO:所有的节点都没有lazy link
-            FileOperator.writeToFile("没有节点有lazy link ");
+            System.out.println("没有节点有lazy link ");
         }
 //        linkable.getLazyPeers().add(minLazyPeersNode);
         //TODO:如果passive list中可用于连接的节点，小于某一个阈值，更新passive list
@@ -168,7 +167,7 @@ public class BroadcastRule implements CDProtocol {
     }
 
     private void fillPassivePeers(Node node, int hop, int protocolID) {
-        FileOperator.writeToFile("fill passive peers");
+        System.out.println("fill passive peers");
         int hops = 0;
         EagerLazyLink nLink = getNodeLinkable(node, protocolID);
         Set<Node> nPSet = new HashSet<>(nLink.passiveNodes.stream().filter(x -> x.isUp()).collect(Collectors.toSet()));

@@ -1,6 +1,6 @@
-package jiahaoliu.example.broadcasttree;
+package sims.broadcasttree;
 
-import jiahaoliu.example.broadcasttree.model.QueryResult;
+import sims.broadcasttree.model.QueryResult;
 import peersim.config.Configuration;
 import peersim.core.*;
 import peersim.util.IncrementalStats;

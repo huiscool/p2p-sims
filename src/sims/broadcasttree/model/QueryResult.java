@@ -1,4 +1,4 @@
-package jiahaoliu.example.broadcasttree.model;
+package sims.broadcasttree.model;
 
 public class QueryResult {
     private int blockId;

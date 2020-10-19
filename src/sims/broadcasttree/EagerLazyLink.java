@@ -16,7 +16,7 @@
  *
  */
 
-package jiahaoliu.example.broadcasttree;
+package sims.broadcasttree;
 
 import peersim.config.Configuration;
 import peersim.core.Linkable;

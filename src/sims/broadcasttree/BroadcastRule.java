@@ -1,7 +1,7 @@
-package jiahaoliu.example.broadcasttree;
+package sims.broadcasttree;
 
-import jiahaoliu.example.broadcasttree.Util.FileOperator;
-import jiahaoliu.example.broadcasttree.model.QueryResult;
+import sims.broadcasttree.Util.FileOperator;
+import sims.broadcasttree.model.QueryResult;
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
 import peersim.config.FastConfig;

@@ -5,7 +5,6 @@ import peersim.core.*;
 import peersim.util.IncrementalStats;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class BroadcastObserver implements Control {

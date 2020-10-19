@@ -4,14 +4,11 @@ import sims.broadcasttree.model.QueryResult;
 import peersim.config.Configuration;
 import peersim.config.FastConfig;
 import peersim.core.Control;
-import peersim.core.Linkable;
 import peersim.core.Network;
 import peersim.core.Node;
 
-import java.nio.channels.NonWritableChannelException;
 import java.util.*;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class MsgBroadcastInitializer implements Control {
 

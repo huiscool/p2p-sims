@@ -1,11 +1,9 @@
 package sims.broadcasttree.model;
 
 public class QueryResult {
-    private int blockId;
     private String transactionId;
 
     public QueryResult(int blockId, String transactionId) {
-        this.blockId = blockId;
         this.transactionId = transactionId;
     }
 

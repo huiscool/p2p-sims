@@ -16,6 +16,6 @@ download:
 pingpong:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/pingpong/config.txt
 
-tree:
+broadcasttree:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/broadcasttree/config.txt
 

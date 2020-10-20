@@ -1,14 +1,15 @@
-## Getting Started
+## P2P-SIMS
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+这个仓库实现了非结构化网络中的广播-回收的仿真实验
 
-## Folder Structure
+## 安装
 
-The workspace contains two folders by default, where:
+`make download && make build`
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+## 执行
 
-## Dependency Management
+`make pingpong` 简单的pingpong协议
 
-The `JAVA DEPENDENCIES` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-pack/blob/master/release-notes/v0.9.0.md#work-with-jar-files-directly).
+`make boardcasttree` 基于plumtree的仿真
+
+`make collect` 基于动态生成树的回收仿真

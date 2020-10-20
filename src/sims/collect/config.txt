@@ -1,0 +1,32 @@
+# collect experiments configurations
+
+random.seed 1234567890
+simulation.cycles 30
+
+control.shf Shuffle
+
+network.size 1000
+
+# we don't manage topology of the overlay network for now.
+# use IdleProtocol.
+protocol.lnk IdleProtocol
+
+# broadcast protocol
+protocol.broadcast sims.collect.GossipProtocol
+protocol.broadcast.linkable lnk
+protocol.broadcast.fanout 5
+
+# topology settings
+init.rnd WireKOut
+init.rnd.protocol lnk
+init.rnd.k 20
+
+# we set up some nodes to perform concurrent broadcast
+init.concurent sims.collect.ConcurrentInitializer
+# how many nodes are set up
+init.concurrent.n 1
+
+# observers
+control.bo sims.collect.BroadcastObserver
+control.bo.protocol broadcast
+

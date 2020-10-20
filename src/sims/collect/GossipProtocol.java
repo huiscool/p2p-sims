@@ -40,7 +40,7 @@ public GossipProtocol(String prefix) {
 
 @Override
 public void deliver(Message msg) {
-    mailbox.add(msg);
+    mailbox.add((Message)msg.clone());
 }
 
 @Override

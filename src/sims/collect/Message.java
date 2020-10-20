@@ -2,7 +2,7 @@ package sims.collect;
 
 // Message is an abstraction of query payload.
 // it can be a request or a response or a control message.
-public class Message {
+public class Message implements Cloneable {
 
     private int size;
     private int id;
@@ -17,9 +17,9 @@ public class Message {
     }
 
     public int getID() {
-       return id; 
+        return id; 
     }
-    
+
     @Override
     public int hashCode() {
         return Integer.hashCode(id);
@@ -33,6 +33,18 @@ public class Message {
         Message that = (Message) obj;
         return this.id == that.id;
     }
+
+    @Override
+    public Object clone() {
+        try {
+            Message msg = (Message) super.clone();
+            // add reference copy
+            return msg;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
 
 
@@ -44,8 +56,10 @@ public MessageDigest(int size, int id) {
     super(size, id);
 }
 
+@Override
 public int getSize() {
     return DEFAULT_DIGEST_SIZE;
 }
 
 }
+

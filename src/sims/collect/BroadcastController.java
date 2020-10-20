@@ -3,31 +3,37 @@ package sims.collect;
 import peersim.config.Configuration;
 import peersim.core.*;
 
-public class ConcurrentInitializer implements Control {
+public class BroadcastController implements Control {
 
 /*============================================================================*/
 // parameters
 /*============================================================================*/
 
 private static final String PARAM_PROTOCOL = "protocol";
-private static final String PARAM_INIT_NUM = "initnum";
+private static final String PARAM_MSG_NUM = "msgnum";
 private static final String PARAM_MSG_SIZE = "msgsize";
+private static final String PARAM_PERIOD = "period";
+private static final String PARAM_BEGIN_TIME = "begintime";
 
 /*============================================================================*/
 // fields
 /*============================================================================*/
 private int protocolID;
-private int initNum;
+private int msgNum;
 private int msgSize;
+private int period;
+private int beginTime;
 
 /*============================================================================*/
 // initializations
 /*============================================================================*/
 
-public ConcurrentInitializer(String prefix) {
+public BroadcastController(String prefix) {
     protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
-    initNum = Configuration.getInt(prefix + "." + PARAM_INIT_NUM);
+    msgNum = Configuration.getInt(prefix + "." + PARAM_MSG_NUM);
     msgSize = Configuration.getInt(prefix + "." + PARAM_MSG_SIZE);
+    period = Configuration.getInt(prefix + "." + PARAM_PERIOD);
+    beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
 }
 
 
@@ -36,9 +42,11 @@ public ConcurrentInitializer(String prefix) {
 /*============================================================================*/
 
     public boolean execute() {
+        if ((CommonState.getTime() - beginTime) % period != 0) {
+            return false;
+        }
         // pickup some nodes and deliver messages to their mailbox
-
-        int[] nodeindexs = Util.pickup(initNum, Network.size());
+        int[] nodeindexs = Util.pickup(msgNum, Network.size());
         for(int i=0; i<nodeindexs.length; i++) {
             // generate msg
             Message msg = new Message(msgSize, i);

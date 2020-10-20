@@ -4,7 +4,6 @@ import java.util.*;
 import peersim.core.*;
 
 public class Util {
-    static private Random rand = new Random();
 
     static public Set<Node> pickupNeighbors(int k, Linkable linkable) {
         int[] peerids = pickup(k, linkable.degree());
@@ -23,7 +22,7 @@ public class Util {
         k = k <= 0 ? 0 : k;
         k = k >= n ? n : k;
         for (int i=0; i<k; i++) {
-            int j = i+rand.nextInt(n-i);
+            int j = i+CommonState.r.nextInt(n-i);
             int tmp = out[j];
             out[j] = out[i];
             out[i] = tmp;

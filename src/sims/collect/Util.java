@@ -6,7 +6,7 @@ import peersim.core.*;
 public class Util {
     static private Random rand = new Random();
 
-    static public Set<Node> PickupNeighbors(int k, Linkable linkable) {
+    static public Set<Node> pickupNeighbors(int k, Linkable linkable) {
         int[] peerids = pickup(k, linkable.degree());
         Set<Node> out = new HashSet<Node>();
         for (int i=0; i<peerids.length; i++) {
@@ -15,7 +15,7 @@ public class Util {
         return out;
     }
     
-    static private int[] pickup(int k, int n) {
+    static public int[] pickup(int k, int n) {
         int[] out =  new int[n];
         for (int i=0; i<n; i++) {
             out[i] = i;
@@ -30,4 +30,5 @@ public class Util {
         }
         return Arrays.copyOfRange(out, 0, k);
     }
+
 }

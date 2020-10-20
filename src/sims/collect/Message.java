@@ -19,4 +19,18 @@ public class Message {
     public int GetID() {
        return id; 
     }
+    
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Message)) {
+            return false;
+        }
+        Message that = (Message) obj;
+        return this.id == that.id;
+    }
 }

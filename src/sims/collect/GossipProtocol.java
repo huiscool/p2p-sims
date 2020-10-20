@@ -8,19 +8,19 @@ import peersim.config.*;
 import java.util.*;
 
 // GossipProtocol: a simple implementation of gossip protocol
-public class GossipProtocol extends IdleProtocol implements CDProtocol {
+public class GossipProtocol extends IdleProtocol implements CDProtocol, Deliverable {
 
 /*============================================================================*/
 // parameters
 /*============================================================================*/
-private final String ParamFanout = "fanout";
+private static final String PARAM_FANOUT = "fanout";
 
 
 /*============================================================================*/
 // fields
 /*============================================================================*/
 private int fanout; 
-private Set<Message> mailbox; // the messages in mailbox
+private Deque<Message> mailbox; // the messages in mailbox
 private Set<Message> seen;
 
 /*============================================================================*/
@@ -28,8 +28,8 @@ private Set<Message> seen;
 /*============================================================================*/
 public GossipProtocol(String prefix) {
     super(prefix);
-    fanout = Configuration.getInt(prefix + "." + ParamFanout);
-    mailbox = new HashSet<>();
+    fanout = Configuration.getInt(prefix + "." + PARAM_FANOUT);
+    mailbox = new LinkedList<>();
     seen = new HashSet<>();
 }
 
@@ -37,6 +37,11 @@ public GossipProtocol(String prefix) {
 /*============================================================================*/
 // methods
 /*============================================================================*/
+
+@Override
+public void deliver(Message msg) {
+    mailbox.add(msg);
+}
 
 @Override
 public void nextCycle(Node node, int protocolID) {
@@ -51,14 +56,17 @@ public void nextCycle(Node node, int protocolID) {
     Linkable linkable = (Linkable) node.getProtocol(linkableID);
 
     // for each unhandle message
-    for (Message msg : mailbox) {
-        mailbox.remove(msg);
+    while (!mailbox.isEmpty()) {
+        
+        Message msg = mailbox.pop();
         if (seen.contains(msg)) {
+            // System.out.println(node.getID()+": msg seen");
             continue;
         }
-        Set<Node> neighbors = Util.PickupNeighbors(fanout, linkable);
+        // System.out.println(node.getID()+": msg not seen");
+        Set<Node> neighbors = Util.pickupNeighbors(fanout, linkable);
         for (Node neigh : neighbors) {
-            sendMsg(node, neigh, msg);
+            sendMsg(protocolID, node, neigh, msg);
         }
     }
 }
@@ -67,8 +75,8 @@ public void nextCycle(Node node, int protocolID) {
 public Object clone() {
     GossipProtocol gp = (GossipProtocol) super.clone();
     gp.fanout = this.fanout;
-    gp.mailbox = this.mailbox;
-    gp.seen = this.seen;
+    gp.mailbox = new LinkedList<>();
+    gp.seen = new HashSet<>();
     return gp;
 }
 
@@ -76,25 +84,33 @@ public Object clone() {
 // helpers
 /*============================================================================*/
 
-private void sendMsg(Node from, Node to, Message msg) {
-    senderHandleSendMsg(from, msg);
-    receiverHandleSendMsg(to, msg);
+static private void sendMsg(int protocolID, Node from, Node to, Message msg) {
+    GossipProtocol pfrom = (GossipProtocol) from.getProtocol(protocolID);
+    GossipProtocol pto = (GossipProtocol) to.getProtocol(protocolID);
+    senderHandleSendMsg(pfrom, msg);
+    receiverHandleSendMsg(pto, msg);
     // notify the observer
-    notifyObserverSendMsg(from, to, msg);
+    notifyObserverSendMsg(protocolID, from, to, msg);
 }
 
-private void senderHandleSendMsg(Node from, Message msg) {
+static private void senderHandleSendMsg(GossipProtocol from, Message msg) {
     // add message to seen
-    seen.add(msg);
+    if (!from.seen.contains(msg)) {
+        from.seen.add(msg);
+    }
 }
 
-private void receiverHandleSendMsg(Node to, Message msg) {
+static private void receiverHandleSendMsg(GossipProtocol to, Message msg) {
     // deliver the message
-    mailbox.add(msg);
+    to.deliver(msg);
 }
 
-private void notifyObserverSendMsg(Node from, Node to, Message msg) {
-    
+static private void notifyObserverSendMsg(int protocolID, Node from, Node to, Message msg) {
+    BroadcastObserver.handleSendMsg(protocolID, from, to, msg);
 }
 
+}
+
+interface Deliverable {
+    void deliver(Message msg);
 }

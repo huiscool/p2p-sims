@@ -12,11 +12,11 @@ public class Message {
         this.id = id;
     }
 
-    public int GetSize() {
+    public int getSize() {
         return size;
     }
 
-    public int GetID() {
+    public int getID() {
        return id; 
     }
     
@@ -33,4 +33,19 @@ public class Message {
         Message that = (Message) obj;
         return this.id == that.id;
     }
+}
+
+
+class MessageDigest extends Message {
+
+private static final int DEFAULT_DIGEST_SIZE = 5;
+
+public MessageDigest(int size, int id) {
+    super(size, id);
+}
+
+public int getSize() {
+    return DEFAULT_DIGEST_SIZE;
+}
+
 }

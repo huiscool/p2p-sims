@@ -86,7 +86,3 @@ public Object clone() {
 }
 
 }
-
-interface Deliverable {
-    void deliver(Message msg);
-}

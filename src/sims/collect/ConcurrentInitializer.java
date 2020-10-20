@@ -43,13 +43,20 @@ public ConcurrentInitializer(String prefix) {
             // generate msg
             Message msg = new Message(msgSize, i);
 
-            // get node and related protocol
+            // get nodes and related protocol
             Node node = Network.get(nodeindexs[i]);
             Deliverable d = (Deliverable) node.getProtocol(protocolID);
 
-            // deliver message
+            // deliver message into their mailboxes
             d.deliver(msg);
         }
         return false;
     }
+}
+
+/**
+ * Deliverable is the interface for message delivery.
+ */
+interface Deliverable {
+    void deliver(Message msg);
 }

@@ -54,4 +54,8 @@ static public void handleSendMsg(int protocolID, Node from, Node to, Message msg
    nodeRecvs.put( (int)to.getID(), recv+1);
 }
 
+static public void handleRecvMsg(int protocolID, Node from, Node to, Message msg) {
+   
+}
+
 }

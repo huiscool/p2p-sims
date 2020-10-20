@@ -68,9 +68,16 @@ public void nextCycle(Node node, int protocolID) {
             if (!from.seen.contains(msg)) {
                 from.seen.add(msg);
             }
-            to.mailbox.add(msg);
+
             // notify the observer
             BroadcastObserver.handleSendMsg(protocolID, node, neigh, msg);
+
+            if (neigh.isUp()) {
+                // deliver online neighbors
+                to.deliver(msg);
+            }
+            // notify the observer
+            BroadcastObserver.handleRecvMsg(protocolID, node, neigh, msg);
         }
     }
     mailbox.clear();

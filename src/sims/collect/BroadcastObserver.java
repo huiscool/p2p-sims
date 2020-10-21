@@ -52,8 +52,8 @@ public boolean execute() {
 static public void handleSendMsg(int protocolID, Node from, Node to, Message msg) {
    msgSizeStats.add(msg.size);
    msgHopStats.add(msg.hop);
-   Integer recv = (Integer)nodeRecvs.getOrDefault((int)to.getID(), 0);
-   nodeRecvs.put( (int)to.getID(), recv+1);
+   Integer recv = (Integer)nodeRecvs.getOrDefault(to.getIndex(), 0);
+   nodeRecvs.put(to.getIndex(), recv+1);
 }
 
 static public void handleRecvMsg(int protocolID, Node from, Node to, Message msg) {

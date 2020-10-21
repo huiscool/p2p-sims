@@ -66,7 +66,7 @@ public void nextCycle(Node node, int protocolID) {
         // write an outgoing mail
         Message outgoing = (Message) incoming.clone();
         outgoing.hop += 1;
-        outgoing.fromNodeID = (int) node.getID();
+        outgoing.fromNodeIndex = node.getIndex();
 
         Set<Node> neighbors = Util.pickupNeighbors(fanout, linkable);
         for (Node neigh : neighbors) {

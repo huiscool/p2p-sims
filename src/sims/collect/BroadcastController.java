@@ -55,8 +55,8 @@ public BroadcastController(String prefix) {
             msg.size = this.msgSize;
             msg.id = i;
             msg.hop = 0;
-            msg.fromNodeID = (int) node.getID();
-            msg.rootNodeID = (int) node.getID();
+            msg.fromNodeIndex = node.getIndex();
+            msg.rootNodeIndex = node.getIndex();
 
             // deliver message into their mailboxes
             Deliverable d = (Deliverable) node.getProtocol(this.protocolID);

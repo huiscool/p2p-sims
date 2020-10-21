@@ -7,8 +7,8 @@ public class Message implements Cloneable {
     public int size;
     public int id;
     public int hop;
-    public int fromNodeID;
-    public int rootNodeID;
+    public int fromNodeIndex;
+    public int rootNodeIndex;
 
     @Override
     public int hashCode() {

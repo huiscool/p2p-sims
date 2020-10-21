@@ -90,8 +90,8 @@ public void nextCycle(Node node, int protocolID) {
 public Object clone() {
     GossipProtocol that = (GossipProtocol) super.clone();
     that.fanout = this.fanout;
-    that.mailbox = new LinkedList<>();
-    that.seen = new HashSet<>();
+    that.mailbox = new LinkedList<>(this.mailbox);
+    that.seen = new HashSet<>(this.seen);
     return that;
 }
 

@@ -47,6 +47,7 @@ public boolean execute() {
     for(int i=0; i<nodeindexs.length; i++) {
         Network.get(nodeindexs[i]).setFailState(Fallible.DEAD);
     }
+    System.out.println("induced churn in network: "+k+" node are killed");
     return false;
 }
 

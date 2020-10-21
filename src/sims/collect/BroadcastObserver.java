@@ -20,7 +20,8 @@ private static final String PARAM_PROTOCOL = "protocol";
 
 private int protocolID;
 
-static private IncrementalStats msgStats = new IncrementalStats();
+static private IncrementalStats msgSizeStats = new IncrementalStats();
+static private IncrementalStats msgHopStats = new IncrementalStats();
 static private HashMap<Integer, Integer> nodeRecvs = new HashMap<>();
 
 /*============================================================================*/
@@ -37,8 +38,9 @@ public BroadcastObserver(String prefix) {
 
 public boolean execute() {
    // print stats
-   System.out.println("message sent:"+ msgStats.getN());
-   System.out.println("node received:"+nodeRecvs.size());
+   System.out.printf("msgTotal=%d,", msgSizeStats.getN());
+   System.out.printf("averageHop=%f,", msgHopStats.getAverage());
+   System.out.printf("maxHop=%f%n", msgHopStats.getMax());
    return false;
 }
 
@@ -48,8 +50,8 @@ public boolean execute() {
 /*============================================================================*/
 
 static public void handleSendMsg(int protocolID, Node from, Node to, Message msg) {
-   msgStats.add(msg.getSize());
-   // nodeStats.add(to.getIndex());
+   msgSizeStats.add(msg.size);
+   msgHopStats.add(msg.hop);
    Integer recv = (Integer)nodeRecvs.getOrDefault((int)to.getID(), 0);
    nodeRecvs.put( (int)to.getID(), recv+1);
 }

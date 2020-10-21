@@ -3,6 +3,7 @@ package sims.collect;
 import peersim.cdsim.CDProtocol;
 import peersim.core.IdleProtocol;
 import peersim.core.Linkable;
+import peersim.core.Network;
 import peersim.core.Node;
 import peersim.config.*;
 import java.util.*;
@@ -40,7 +41,7 @@ public GossipProtocol(String prefix) {
 
 @Override
 public void deliver(Message msg) {
-    mailbox.add((Message)msg.clone());
+    mailbox.add(msg);
 }
 
 @Override
@@ -56,28 +57,30 @@ public void nextCycle(Node node, int protocolID) {
     Linkable linkable = (Linkable) node.getProtocol(linkableID);
 
     // for each unhandle message
-    for (Message msg : mailbox) {
-        if (seen.contains(msg)) {
-            // System.out.println(node.getID()+": msg seen");
+    for (Message incoming : mailbox) {
+        if (seen.contains(incoming)) {
             continue;
         }
+        seen.add(incoming);
+
+        // write an outgoing mail
+        Message outgoing = (Message) incoming.clone();
+        outgoing.hop += 1;
+        outgoing.fromNodeID = (int) node.getID();
+
         Set<Node> neighbors = Util.pickupNeighbors(fanout, linkable);
         for (Node neigh : neighbors) {
-            GossipProtocol from = this;
-            GossipProtocol to = (GossipProtocol) neigh.getProtocol(protocolID);
-            if (!from.seen.contains(msg)) {
-                from.seen.add(msg);
-            }
 
             // notify the observer
-            BroadcastObserver.handleSendMsg(protocolID, node, neigh, msg);
+            BroadcastObserver.handleSendMsg(protocolID, node, neigh, outgoing);
 
             if (neigh.isUp()) {
+                GossipProtocol to = (GossipProtocol) neigh.getProtocol(protocolID);
                 // deliver online neighbors
-                to.deliver(msg);
+                to.deliver(outgoing);
+                // notify the observer
+                BroadcastObserver.handleRecvMsg(protocolID, node, neigh, outgoing);
             }
-            // notify the observer
-            BroadcastObserver.handleRecvMsg(protocolID, node, neigh, msg);
         }
     }
     mailbox.clear();

@@ -29,11 +29,11 @@ private int beginTime;
 /*============================================================================*/
 
 public BroadcastController(String prefix) {
-    protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
-    msgNum = Configuration.getInt(prefix + "." + PARAM_MSG_NUM);
-    msgSize = Configuration.getInt(prefix + "." + PARAM_MSG_SIZE);
-    period = Configuration.getInt(prefix + "." + PARAM_PERIOD);
-    beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
+    this.protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
+    this.msgNum = Configuration.getInt(prefix + "." + PARAM_MSG_NUM);
+    this.msgSize = Configuration.getInt(prefix + "." + PARAM_MSG_SIZE);
+    this.period = Configuration.getInt(prefix + "." + PARAM_PERIOD);
+    this.beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
 }
 
 
@@ -42,20 +42,24 @@ public BroadcastController(String prefix) {
 /*============================================================================*/
 
     public boolean execute() {
-        if ((CommonState.getTime() - beginTime) % period != 0) {
+        if ((CommonState.getTime() - this.beginTime) % this.period != 0) {
             return false;
         }
         // pickup some nodes and deliver messages to their mailbox
-        int[] nodeindexs = Util.pickup(msgNum, Network.size());
+        int[] nodeindexs = Util.pickup(this.msgNum, Network.size());
         for(int i=0; i<nodeindexs.length; i++) {
-            // generate msg
-            Message msg = new Message(msgSize, i);
 
-            // get nodes and related protocol
             Node node = Network.get(nodeindexs[i]);
-            Deliverable d = (Deliverable) node.getProtocol(protocolID);
+            // generate msg
+            Message msg = new Message();
+            msg.size = this.msgSize;
+            msg.id = i;
+            msg.hop = 0;
+            msg.fromNodeID = (int) node.getID();
+            msg.rootNodeID = (int) node.getID();
 
             // deliver message into their mailboxes
+            Deliverable d = (Deliverable) node.getProtocol(this.protocolID);
             d.deliver(msg);
         }
         return false;

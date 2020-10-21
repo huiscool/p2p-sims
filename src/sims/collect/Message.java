@@ -4,21 +4,11 @@ package sims.collect;
 // it can be a request or a response or a control message.
 public class Message implements Cloneable {
 
-    private int size;
-    private int id;
-
-    public Message(int size, int id) {
-        this.size = size;
-        this.id = id;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public int getID() {
-        return id; 
-    }
+    public int size;
+    public int id;
+    public int hop;
+    public int fromNodeID;
+    public int rootNodeID;
 
     @Override
     public int hashCode() {
@@ -46,20 +36,3 @@ public class Message implements Cloneable {
         return null;
     }
 }
-
-
-class MessageDigest extends Message {
-
-private static final int DEFAULT_DIGEST_SIZE = 5;
-
-public MessageDigest(int size, int id) {
-    super(size, id);
-}
-
-@Override
-public int getSize() {
-    return DEFAULT_DIGEST_SIZE;
-}
-
-}
-

@@ -1,22 +1,22 @@
 # collect experiments configurations
 
-# random.seed 1234567890
-simulation.cycles 50
+random.seed 1234567890
+simulation.cycles 30
 
 control.shf Shuffle
 
-network.size 10000
+network.size 100
 
 # linkable protocol
-protocol.lnk sims.broadcasttree.EagerLazyLink
+protocol.lnk sims.collect.EagerLazyLink
 protocol.lnk.eagercapacity 5
 protocol.lnk.lazycapacity 1
-protocol.lnk.passivecap 10
 
 # broadcast protocol
-protocol.broadcast sims.collect.GossipProtocol
+protocol.broadcast sims.collect.PlumtreeProtocol
 protocol.broadcast.linkable lnk
-protocol.broadcast.fanout 3
+protocol.broadcast.ihavetimeout 5 
+protocol.broadcast.grafttimeout 2
 
 # topology settings
 init.rnd WireKOut
@@ -28,13 +28,13 @@ control.bc sims.collect.BroadcastController
 control.bc.protocol broadcast
 control.bc.msgnum 1
 control.bc.msgsize 10
-control.bc.begintime 5
-control.bc.period 20
+control.bc.begintime 0
+control.bc.period 100
 
 # churn controller
 control.churn sims.collect.ChurnController
-control.churn.begintime 7
-control.churn.percentage 0.8
+control.churn.begintime -1
+control.churn.percentage 0.0
 
 # observers
 control.bo sims.collect.BroadcastObserver

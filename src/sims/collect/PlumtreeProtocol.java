@@ -62,6 +62,11 @@ public void nextCycle(Node node, int protocolID) {
     int linkableID = FastConfig.getLinkable(protocolID);
     EagerLazyLink linkable = (EagerLazyLink) node.getProtocol(linkableID);
 
+    if (!node.isUp()) {
+        // don't process message if node is down
+        return;
+    }
+
     for(Message msg : mailbox) {
 
         Node from = Network.get(msg.fromNodeIndex);
@@ -69,6 +74,10 @@ public void nextCycle(Node node, int protocolID) {
         PlumtreeMessage outgoing = (PlumtreeMessage) incoming.clone();
         outgoing.fromNodeIndex = node.getIndex();
         outgoing.hop += 1;
+
+        // notify observer
+        BroadcastObserver.handleRecvMsg(protocolID, from, node, msg);
+
         // handle Gossip
         if (incoming.gossip != null) {
             handleGossip(linkable, protocolID, from, incoming, outgoing);
@@ -174,6 +183,11 @@ private void handleGraft(
         gossipMsg.gossip = gossipMsg.new Gossip();
         PlumtreeProtocol p = (PlumtreeProtocol) from.getProtocol(protocolID);
         p.deliver(gossipMsg);
+
+        // notify observer
+        // node is the sender and from is the receiver.
+        Node node = Network.get(outgoing.fromNodeIndex);
+        BroadcastObserver.handleSendMsg(protocolID, node, from, outgoing);
     }
 }
 private void handlePrune(
@@ -206,11 +220,15 @@ private void eagerPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage ou
     PlumtreeMessage eagerMsg = (PlumtreeMessage) outgoing.clone();
     for(Node eager: linkable.getEagerPeers()) {
 
-        linkable.graft(eager);
         eagerMsg.gossip = eagerMsg.new Gossip();
 
         PlumtreeProtocol p = (PlumtreeProtocol) eager.getProtocol(protocolID);
         p.deliver(eagerMsg);
+
+        // notify observer
+        // node is the sender and eager is the receiver.
+        Node node = Network.get(eagerMsg.fromNodeIndex);
+        BroadcastObserver.handleSendMsg(protocolID, node, eager, eagerMsg);
     }
 }
 
@@ -223,6 +241,11 @@ private void lazyPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage out
 
         PlumtreeProtocol p = (PlumtreeProtocol) lazy.getProtocol(protocolID);
         p.deliver(lazyMsg);
+
+        // notify observer
+        // node is the sender and lazy is the receiver.
+        Node node = Network.get(lazyMsg.fromNodeIndex);
+        BroadcastObserver.handleSendMsg(protocolID, node, lazy, lazyMsg);
     }
 }
 

@@ -56,8 +56,18 @@ public void nextCycle(Node node, int protocolID) {
     int linkableID = FastConfig.getLinkable(protocolID);
     Linkable linkable = (Linkable) node.getProtocol(linkableID);
 
+    if (!node.isUp()) {
+        // don't process message if node is down
+        return;
+    }
+
     // for each unhandle message
     for (Message incoming : mailbox) {
+
+        // notify the observer
+        Node from = Network.get(incoming.fromNodeIndex);
+        BroadcastObserver.handleRecvMsg(protocolID, from, node, incoming);
+
         if (seen.contains(incoming)) {
             continue;
         }
@@ -74,13 +84,9 @@ public void nextCycle(Node node, int protocolID) {
             // notify the observer
             BroadcastObserver.handleSendMsg(protocolID, node, neigh, outgoing);
 
-            if (neigh.isUp()) {
-                GossipProtocol to = (GossipProtocol) neigh.getProtocol(protocolID);
-                // deliver online neighbors
-                to.deliver(outgoing);
-                // notify the observer
-                BroadcastObserver.handleRecvMsg(protocolID, node, neigh, outgoing);
-            }
+            // deliver to neighs
+            GossipProtocol to = (GossipProtocol) neigh.getProtocol(protocolID);
+            to.deliver(outgoing);
         }
     }
     mailbox.clear();

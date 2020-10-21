@@ -1,7 +1,7 @@
 package sims.collect;
 
 import peersim.cdsim.CDProtocol;
-import peersim.core.Linkable;
+import peersim.core.Network;
 import peersim.core.Node;
 import peersim.config.*;
 import java.util.*;
@@ -10,22 +10,34 @@ public class PlumtreeProtocol implements CDProtocol, Deliverable{
 /*============================================================================*/
 // parameters
 /*============================================================================*/
-private static final String PARAM_FANOUT = "fanout";    
+private static final String PARAM_IHAVE_TIMEOUT= "ihavetimeout";
+private static final String PARAM_GRAFT_TIMEOUT = "grafttimeout";
 
 /*============================================================================*/
 // fields
 /*============================================================================*/
-private int fanout; 
-private Deque<Message> mailbox; // the messages in mailbox
-private Set<Message> seen;
+private int ihaveTimeout;
+private int graftTimeout;
+
+private Deque<Message> mailbox; // stores unchecked messages
+private Set<Message> seen; // stores seen gossips
+private Map<Integer, LinkedList<Node>> missing; // stores received ihave messages
+
+private MessageIDTimer ihaveTimer;
+private MessageIDTimer graftTimer;
 
 /*============================================================================*/
 // constructor
 /*============================================================================*/
 public PlumtreeProtocol(String prefix) {
-    fanout = Configuration.getInt(prefix + "." + PARAM_FANOUT);
+    ihaveTimeout = Configuration.getInt(prefix + "." + PARAM_IHAVE_TIMEOUT);
+    graftTimeout = Configuration.getInt(prefix + "." + PARAM_GRAFT_TIMEOUT);
     mailbox = new LinkedList<>();
     seen = new HashSet<>();
+    missing = new HashMap<>();
+
+    ihaveTimer = new MessageIDTimer(ihaveTimeout);
+    graftTimer = new MessageIDTimer(graftTimeout);
 }
 
 
@@ -48,13 +60,43 @@ public void nextCycle(Node node, int protocolID) {
 
     // get linkable
     int linkableID = FastConfig.getLinkable(protocolID);
-    Linkable linkable = (Linkable) node.getProtocol(linkableID);
+    EagerLazyLink linkable = (EagerLazyLink) node.getProtocol(linkableID);
 
-    // for each unhandle message
     for(Message msg : mailbox) {
-        handleMsg(msg);
+
+        Node from = Network.get(msg.fromNodeIndex);
+        PlumtreeMessage incoming = (PlumtreeMessage) msg;
+        PlumtreeMessage outgoing = (PlumtreeMessage) incoming.clone();
+        outgoing.fromNodeIndex = node.getIndex();
+        outgoing.hop += 1;
+        // handle Gossip
+        if (incoming.gossip != null) {
+            handleGossip(linkable, protocolID, from, incoming, outgoing);
+        }
+        // handle IHave
+        if (incoming.iHave != null ) {
+            handleIHave(linkable, protocolID, from, incoming, outgoing);
+        }
+        // handle Graft
+        if (incoming.graft != null) {
+            handleGraft(linkable, protocolID, from, incoming, outgoing);
+        }
+        // handle Prune
+        if (incoming.prune != null) {
+            handlePrune(linkable, protocolID, from, incoming, outgoing);
+        }
     }
     mailbox.clear();
+
+    Set<Integer> ihaveTimeoutIDs = ihaveTimer.nextCycle();
+    Set<Integer> graftTimeoutIDs = graftTimer.nextCycle();
+    for(int msgID : ihaveTimeoutIDs) {
+        handleTimeout(linkable, protocolID, msgID);
+    }
+    for(int msgID : graftTimeoutIDs) {
+        handleTimeout(linkable, protocolID, msgID);
+    }
+
 }
 
 @Override
@@ -62,10 +104,10 @@ public Object clone() {
     PlumtreeProtocol that = null;
     try {
         that = (PlumtreeProtocol) super.clone();
-        that.fanout = this.fanout;
-        that.mailbox = new LinkedList<>();
-        that.seen = new HashSet<>();
+        that.mailbox = new LinkedList<>(this.mailbox);
+        that.seen = new HashSet<>(this.seen);
     } catch(CloneNotSupportedException e){
+        e.printStackTrace();
     }
     return that;
 }
@@ -73,8 +115,156 @@ public Object clone() {
 /*============================================================================*/
 // helpers
 /*============================================================================*/
+private void handleGossip(
+    EagerLazyLink linkable,
+    int protocolID,
+    Node from,
+    PlumtreeMessage incoming,
+    PlumtreeMessage outgoing
+) {
+    if (seen.contains(incoming)) {
+        linkable.prune(from);
+        outgoing.prune = outgoing.new Prune();
+        return;
+    }
+    seen.add(incoming);
 
-private void handleMsg(Message msg) {
+    // cancel timer
+    ihaveTimer.cancel(incoming.id);
+    graftTimer.cancel(incoming.id);
+
+    // eager push
+    eagerPush(linkable, protocolID, outgoing);
+    // lazy push
+    lazyPush(linkable, protocolID, outgoing);
+    // graft
+    linkable.graft(from);
+    
+}
+private void handleIHave(
+    EagerLazyLink linkable,
+    int protocolID,
+    Node from,
+    PlumtreeMessage incoming,
+    PlumtreeMessage outgoing
+) {
+    if (seen.contains(incoming)) {
+        return;
+    }
+    // set up timer
+    ihaveTimer.add(incoming.id);
+
+    // add missing
+    LinkedList<Node> ihaveList = missing.getOrDefault(incoming.id, new LinkedList<>());
+    ihaveList.add(from);
+    missing.put(incoming.id, ihaveList);
+
+}
+private void handleGraft(
+    EagerLazyLink linkable,
+    int protocolID,
+    Node from,
+    PlumtreeMessage incoming,
+    PlumtreeMessage outgoing
+) {
+    linkable.graft(from);
+    if (seen.contains(incoming)) {
+        // send gossip
+        PlumtreeMessage gossipMsg = (PlumtreeMessage) outgoing.clone();
+        gossipMsg.gossip = gossipMsg.new Gossip();
+        PlumtreeProtocol p = (PlumtreeProtocol) from.getProtocol(protocolID);
+        p.deliver(gossipMsg);
+    }
+}
+private void handlePrune(
+    EagerLazyLink linkable,
+    int protocolID,
+    Node from,
+    PlumtreeMessage incoming,
+    PlumtreeMessage outgoing
+) {
+    linkable.prune(from);
 }
 
+private void handleTimeout(
+    EagerLazyLink linkable,
+    int protocolID,
+    int msgID
+) {
+    // setup timer
+    graftTimer.add(msgID);
+
+    // pop missing
+    Node first = missing.get(msgID).pollFirst();
+
+    // graft
+    linkable.graft(first);
+
+}
+
+private void eagerPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage outgoing) {
+    PlumtreeMessage eagerMsg = (PlumtreeMessage) outgoing.clone();
+    for(Node eager: linkable.getEagerPeers()) {
+
+        linkable.graft(eager);
+        eagerMsg.gossip = eagerMsg.new Gossip();
+
+        PlumtreeProtocol p = (PlumtreeProtocol) eager.getProtocol(protocolID);
+        p.deliver(eagerMsg);
+    }
+}
+
+private void lazyPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage outgoing) {
+    PlumtreeMessage lazyMsg = (PlumtreeMessage) outgoing.clone();
+    for(Node lazy: linkable.getLazyPeers()) {
+
+        lazyMsg.iHave = lazyMsg.new IHave();
+        // for now we use the origin message id.
+
+        PlumtreeProtocol p = (PlumtreeProtocol) lazy.getProtocol(protocolID);
+        p.deliver(lazyMsg);
+    }
+}
+
+}
+
+class MessageIDTimer {
+    private LinkedList<Set<Integer>> messageIDs;
+    
+    public MessageIDTimer(int cycleCap) {
+       messageIDs = new LinkedList<>(); 
+       for (int i=0; i<cycleCap+1; i++) {
+           messageIDs.add(new HashSet<>());
+       }
+    }
+
+    public void cancel(Integer msgid) {
+        for(Set<Integer> node : messageIDs) {
+            node.remove(msgid);
+        }
+    }
+
+    public void add(Integer msgid) {
+        if (!contains(msgid)) {
+            Set<Integer> head = messageIDs.peekFirst();
+            head.add(msgid);
+        }
+    }
+
+    public boolean contains(Integer msgid) {
+        for(Set<Integer> node : messageIDs) {
+            if (node.contains(msgid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // re-evaluate the timer in next cycle
+    // return the timeout msgids.
+    public Set<Integer> nextCycle() {
+        Set<Integer> last = messageIDs.pollLast();
+        messageIDs.addFirst(new HashSet<Integer>());
+        return last;
+    }
 }

@@ -35,4 +35,16 @@ public class Message implements Cloneable {
         }
         return null;
     }
+    
+    static Message New(String type) {
+        switch(type) {
+            case "plumtree":
+                PlumtreeMessage msg = new PlumtreeMessage();
+                msg.gossip =  msg.new Gossip();
+                return msg;
+            default:
+                return new Message();
+        }
+        
+    }
 }

@@ -10,6 +10,7 @@ public class BroadcastController implements Control {
 /*============================================================================*/
 
 private static final String PARAM_PROTOCOL = "protocol";
+private static final String PARAM_MSG_TYPE = "msgtype";
 private static final String PARAM_MSG_NUM = "msgnum";
 private static final String PARAM_MSG_SIZE = "msgsize";
 private static final String PARAM_PERIOD = "period";
@@ -19,6 +20,7 @@ private static final String PARAM_BEGIN_TIME = "begintime";
 // fields
 /*============================================================================*/
 private int protocolID;
+private String msgType;
 private int msgNum;
 private int msgSize;
 private int period;
@@ -30,6 +32,7 @@ private int beginTime;
 
 public BroadcastController(String prefix) {
     this.protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
+    this.msgType = Configuration.getString(prefix + "." + PARAM_MSG_TYPE);
     this.msgNum = Configuration.getInt(prefix + "." + PARAM_MSG_NUM);
     this.msgSize = Configuration.getInt(prefix + "." + PARAM_MSG_SIZE);
     this.period = Configuration.getInt(prefix + "." + PARAM_PERIOD);
@@ -51,7 +54,7 @@ public BroadcastController(String prefix) {
 
             Node node = Network.get(nodeindexs[i]);
             // generate msg
-            Message msg = new Message();
+            Message msg = Message.New(msgType);
             msg.size = this.msgSize;
             msg.id = i;
             msg.hop = 0;

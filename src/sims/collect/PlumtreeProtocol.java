@@ -58,14 +58,14 @@ public void nextCycle(Node node, int protocolID) {
     // 2. if receive a seen message, drop it;
     // 3. if receive an unseen message, resend it to serveral neighbors.
 
-    // get linkable
-    int linkableID = FastConfig.getLinkable(protocolID);
-    EagerLazyLink linkable = (EagerLazyLink) node.getProtocol(linkableID);
-
     if (!node.isUp()) {
         // don't process message if node is down
         return;
     }
+
+    // get linkable
+    int linkableID = FastConfig.getLinkable(protocolID);
+    EagerLazyLink linkable = (EagerLazyLink) node.getProtocol(linkableID);
 
     for(Message msg : mailbox) {
 
@@ -151,9 +151,9 @@ private void handleGossip(
     graftTimer.cancel(incoming.id);
 
     // eager push
-    eagerPush(linkable, protocolID, outgoing);
+    eagerPush(linkable, protocolID, from, outgoing);
     // lazy push
-    lazyPush(linkable, protocolID, outgoing);
+    lazyPush(linkable, protocolID, from, outgoing);
     // graft
     linkable.graft(from);
     
@@ -190,8 +190,8 @@ private void handleGraft(
         PlumtreeMessage gossipMsg = (PlumtreeMessage) outgoing.clone();
         gossipMsg.gossip = gossipMsg.new Gossip();
 
-        PlumtreeProtocol p = (PlumtreeProtocol) from.getProtocol(protocolID);
-        p.deliver(gossipMsg);
+        PlumtreeProtocol pfrom = (PlumtreeProtocol) from.getProtocol(protocolID);
+        pfrom.deliver(gossipMsg);
 
         // notify observer
         // node is the sender and from is the receiver.
@@ -226,6 +226,7 @@ private void handleTimeout(
 
     // send graft message and notify
     PlumtreeMessage outgoing = new PlumtreeMessage();
+    outgoing.fromNodeIndex = node.getIndex();
     outgoing.graft = outgoing.new Graft();
     outgoing.id = msgID;
 
@@ -236,9 +237,18 @@ private void handleTimeout(
 
 }
 
-private void eagerPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage outgoing) {
+private void eagerPush(
+    EagerLazyLink linkable,
+    int protocolID, 
+    Node from,
+    PlumtreeMessage outgoing
+)  {
     PlumtreeMessage eagerMsg = (PlumtreeMessage) outgoing.clone();
     for(Node eager: linkable.getEagerPeers()) {
+        // don't send back to sender
+        if (eager.getIndex() == from.getIndex()) {
+            continue;
+        }
 
         eagerMsg.gossip = eagerMsg.new Gossip();
 
@@ -252,9 +262,18 @@ private void eagerPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage ou
     }
 }
 
-private void lazyPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage outgoing) {
+private void lazyPush(
+    EagerLazyLink linkable,
+    int protocolID, 
+    Node from,
+    PlumtreeMessage outgoing
+) {
     PlumtreeMessage lazyMsg = (PlumtreeMessage) outgoing.clone();
     for(Node lazy: linkable.getLazyPeers()) {
+        // don't send back to sender
+        if (lazy.getIndex() == from.getIndex()) {
+            continue;
+        }
 
         lazyMsg.iHave = lazyMsg.new IHave();
         // for now we use the origin message id.

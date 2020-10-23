@@ -74,7 +74,7 @@ public class EagerLazyLink implements Protocol, Linkable {
 
     public void prune(Node node) {
         eagerPeers.remove(node);
-        lazyPeers.remove(node);
+        lazyPeers.add(node);
     }
 
     public void del(Node node) {

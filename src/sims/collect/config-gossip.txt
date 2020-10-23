@@ -24,6 +24,7 @@ init.rnd.k 20
 # broadcast controller
 control.bc sims.collect.BroadcastController
 control.bc.protocol broadcast
+control.bc.msgtype gossip 
 control.bc.msgnum 1
 control.bc.msgsize 10
 control.bc.begintime 5
@@ -36,5 +37,4 @@ control.churn.percentage 0.0
 
 # observers
 control.bo sims.collect.BroadcastObserver
-control.bo.protocol broadcast
 

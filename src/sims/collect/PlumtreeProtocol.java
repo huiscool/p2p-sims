@@ -76,7 +76,7 @@ public void nextCycle(Node node, int protocolID) {
         outgoing.hop += 1;
 
         // notify observer
-        BroadcastObserver.handleRecvMsg(protocolID, from, node, msg);
+        PlumtreeObserver.handleRecvMsg(protocolID, from, node, msg);
 
         // handle Gossip
         if (incoming.gossip != null) {
@@ -100,10 +100,10 @@ public void nextCycle(Node node, int protocolID) {
     Set<Integer> ihaveTimeoutIDs = ihaveTimer.nextCycle();
     Set<Integer> graftTimeoutIDs = graftTimer.nextCycle();
     for(int msgID : ihaveTimeoutIDs) {
-        handleTimeout(linkable, protocolID, msgID);
+        handleTimeout(linkable, protocolID, node, msgID);
     }
     for(int msgID : graftTimeoutIDs) {
-        handleTimeout(linkable, protocolID, msgID);
+        handleTimeout(linkable, protocolID, node, msgID);
     }
 
 }
@@ -133,7 +133,15 @@ private void handleGossip(
 ) {
     if (seen.contains(incoming)) {
         linkable.prune(from);
+        
+        // send prune
         outgoing.prune = outgoing.new Prune();
+        PlumtreeProtocol pfrom = (PlumtreeProtocol) from.getProtocol(protocolID);
+        pfrom.deliver(outgoing);
+
+        // notify
+        Node node = Network.get(outgoing.fromNodeIndex);
+        PlumtreeObserver.handleSendMsg(protocolID, node, from, outgoing);
         return;
     }
     seen.add(incoming);
@@ -181,13 +189,14 @@ private void handleGraft(
         // send gossip
         PlumtreeMessage gossipMsg = (PlumtreeMessage) outgoing.clone();
         gossipMsg.gossip = gossipMsg.new Gossip();
+
         PlumtreeProtocol p = (PlumtreeProtocol) from.getProtocol(protocolID);
         p.deliver(gossipMsg);
 
         // notify observer
         // node is the sender and from is the receiver.
         Node node = Network.get(outgoing.fromNodeIndex);
-        BroadcastObserver.handleSendMsg(protocolID, node, from, outgoing);
+        PlumtreeObserver.handleSendMsg(protocolID, node, from, outgoing);
     }
 }
 private void handlePrune(
@@ -203,6 +212,7 @@ private void handlePrune(
 private void handleTimeout(
     EagerLazyLink linkable,
     int protocolID,
+    Node node,
     int msgID
 ) {
     // setup timer
@@ -213,6 +223,16 @@ private void handleTimeout(
 
     // graft
     linkable.graft(first);
+
+    // send graft message and notify
+    PlumtreeMessage outgoing = new PlumtreeMessage();
+    outgoing.graft = outgoing.new Graft();
+    outgoing.id = msgID;
+
+    PlumtreeProtocol pfirst = (PlumtreeProtocol) first.getProtocol(protocolID);
+    pfirst.deliver(outgoing);
+
+    PlumtreeObserver.handleSendMsg(protocolID, node, first, outgoing);
 
 }
 
@@ -228,7 +248,7 @@ private void eagerPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage ou
         // notify observer
         // node is the sender and eager is the receiver.
         Node node = Network.get(eagerMsg.fromNodeIndex);
-        BroadcastObserver.handleSendMsg(protocolID, node, eager, eagerMsg);
+        PlumtreeObserver.handleSendMsg(protocolID, node, eager, eagerMsg);
     }
 }
 
@@ -245,12 +265,16 @@ private void lazyPush(EagerLazyLink linkable,int protocolID, PlumtreeMessage out
         // notify observer
         // node is the sender and lazy is the receiver.
         Node node = Network.get(lazyMsg.fromNodeIndex);
-        BroadcastObserver.handleSendMsg(protocolID, node, lazy, lazyMsg);
+        PlumtreeObserver.handleSendMsg(protocolID, node, lazy, lazyMsg);
     }
 }
 
 }
 
+/*============================================================================*/
+/**
+ * MessageIDTimer is the simulant timer to know whether a message is timeout.
+ */
 class MessageIDTimer {
     private LinkedList<Set<Integer>> messageIDs;
     

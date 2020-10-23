@@ -3,9 +3,7 @@
 random.seed 1234567890
 simulation.cycles 30
 
-control.shf Shuffle
-
-network.size 100
+network.size 4
 
 # linkable protocol
 protocol.lnk sims.collect.EagerLazyLink

@@ -7,14 +7,22 @@ public class PlumtreeMessage extends Message {
     }
     class Prune {
     }
-    class IWant {
-    }
     class IHave {
     }
 
     Gossip gossip;
     Graft graft;
     Prune prune;
-    IWant iWant;
     IHave iHave;
+
+    public String toString() {
+        return "@" + Integer.toHexString(System.identityHashCode(this))+"{" +
+        "id:" + id + "," + 
+        "from:" + fromNodeIndex + "," + 
+        ((gossip != null)? "gossip,":"") +
+        ((graft != null)? "graft,":"") +
+        ((prune != null)? "prune,":"") +
+        ((iHave != null)? "ihave,":"") +
+        "}";
+    }
 }

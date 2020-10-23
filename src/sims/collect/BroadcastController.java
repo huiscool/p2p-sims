@@ -2,6 +2,7 @@ package sims.collect;
 
 import peersim.config.Configuration;
 import peersim.core.*;
+import java.util.Arrays;
 
 public class BroadcastController implements Control {
 
@@ -65,6 +66,7 @@ public BroadcastController(String prefix) {
             Deliverable d = (Deliverable) node.getProtocol(this.protocolID);
             d.deliver(msg);
         }
+        System.out.println("send to:" + Arrays.toString(nodeindexs));
         return false;
     }
 }

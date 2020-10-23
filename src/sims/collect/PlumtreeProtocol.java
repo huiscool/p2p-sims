@@ -131,16 +131,22 @@ private void handleGossip(
     PlumtreeMessage incoming,
     PlumtreeMessage outgoing
 ) {
+
+    Node node = Network.get(outgoing.fromNodeIndex);
+
     if (seen.contains(incoming)) {
         linkable.prune(from);
         
         // send prune
+        outgoing.gossip = null;
         outgoing.prune = outgoing.new Prune();
+        outgoing.graft = null;
+        outgoing.iHave = null;
+        
         PlumtreeProtocol pfrom = (PlumtreeProtocol) from.getProtocol(protocolID);
         pfrom.deliver(outgoing);
 
         // notify
-        Node node = Network.get(outgoing.fromNodeIndex);
         PlumtreeObserver.handleSendMsg(protocolID, node, from, outgoing);
         return;
     }
@@ -154,9 +160,12 @@ private void handleGossip(
     eagerPush(linkable, protocolID, from, outgoing);
     // lazy push
     lazyPush(linkable, protocolID, from, outgoing);
-    // graft
-    linkable.graft(from);
     
+    // don't graft myself
+    if (from.getIndex() != node.getIndex()) {
+        // graft
+        linkable.graft(from);
+    }
 }
 private void handleIHave(
     EagerLazyLink linkable,

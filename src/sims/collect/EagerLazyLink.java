@@ -68,13 +68,13 @@ public class EagerLazyLink implements Protocol, Linkable {
     }
 
     public void graft(Node node) {
-        eagerPeers.add(node);
+        if(!eagerPeers.contains(node))eagerPeers.add(node);
         lazyPeers.remove(node);
     }
 
     public void prune(Node node) {
         eagerPeers.remove(node);
-        lazyPeers.add(node);
+        if(!lazyPeers.contains(node))lazyPeers.add(node);
     }
 
     public void del(Node node) {
@@ -94,7 +94,7 @@ public class EagerLazyLink implements Protocol, Linkable {
 
     @Override
     public boolean addNeighbor(Node neighbour) {
-        if (eagerPeers.contains(neighbour)) {
+        if (contains(neighbour)) {
             return false;
         }
         //先都加到eager中，自适应到lazy中
@@ -122,7 +122,7 @@ public class EagerLazyLink implements Protocol, Linkable {
 
     @Override
     public String toString() {
-        return "lazy peers : " + lazyPeers.toString() + " eager peers : " + eagerPeers.toString();
+        return "lazy peers : " + lazyPeers.size() + " eager peers : " + eagerPeers.size();
     }
 
     @Override

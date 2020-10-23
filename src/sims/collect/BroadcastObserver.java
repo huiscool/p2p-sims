@@ -19,7 +19,7 @@ private static final String PARAM_PROTOCOL = "protocol";
 // fields
 /*============================================================================*/
 
-private int protocolID;
+protected int protocolID;
 
 protected static IncrementalStats msgSendStats = new IncrementalStats();
 protected static IncrementalStats msgRecvStats = new IncrementalStats();

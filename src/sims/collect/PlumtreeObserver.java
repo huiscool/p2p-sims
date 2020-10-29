@@ -2,6 +2,7 @@ package sims.collect;
 
 import peersim.util.*;
 import peersim.core.*;
+import peersim.config.*;
 
 public class PlumtreeObserver extends BroadcastObserver {
 
@@ -30,6 +31,26 @@ public boolean execute() {
         pruneStats.getN(),
         ihaveStats.getN()
     );
+    // observe topology
+   IncrementalStats eager = new IncrementalStats();
+   IncrementalStats lazy = new IncrementalStats();
+   IncrementalStats fanout = new IncrementalStats();
+
+   for (int i=0; i<Network.size(); i++) {
+      Node n = Network.get(i);
+      // PlumtreeProtocol pp = (PlumtreeProtocol) n.getProtocol(protocolID);
+      int linkableID = FastConfig.getLinkable(protocolID);
+      EagerLazyLink ell = (EagerLazyLink) n.getProtocol(linkableID);
+      eager.add(ell.getEagerPeers().size());
+      lazy.add(ell.getLazyPeers().size());
+      fanout.add(ell.degree());
+   }
+
+   System.out.printf("avgEager=%f,avgLazy=%f,avgFanout=%f%n",
+      eager.getAverage(),
+      lazy.getAverage(),
+      fanout.getAverage()
+   );
     return false;
 }
 

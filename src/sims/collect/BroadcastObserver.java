@@ -2,9 +2,7 @@ package sims.collect;
 
 
 import peersim.core.Control;
-import peersim.core.Network;
 import peersim.config.Configuration;
-import peersim.config.FastConfig;
 import peersim.core.Node;
 import peersim.util.*;
 
@@ -45,26 +43,7 @@ public boolean execute() {
       msgHopStats.getAverage(),
       msgHopStats.getMax()
    );
-   // observe topology
-   IncrementalStats eager = new IncrementalStats();
-   IncrementalStats lazy = new IncrementalStats();
-   IncrementalStats fanout = new IncrementalStats();
-
-   for (int i=0; i<Network.size(); i++) {
-      Node n = Network.get(i);
-      // PlumtreeProtocol pp = (PlumtreeProtocol) n.getProtocol(protocolID);
-      int linkableID = FastConfig.getLinkable(protocolID);
-      EagerLazyLink ell = (EagerLazyLink) n.getProtocol(linkableID);
-      eager.add(ell.getEagerPeers().size());
-      lazy.add(ell.getLazyPeers().size());
-      fanout.add(ell.degree());
-   }
-
-   System.out.printf("avgEager=%f,avgLazy=%f,avgFanout=%f%n",
-      eager.getAverage(),
-      lazy.getAverage(),
-      fanout.getAverage()
-   );
+   
    return false;
 }
 

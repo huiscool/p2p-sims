@@ -1,28 +1,19 @@
 package sims.collect;
 
 public class PlumtreeMessage extends Message {
-    class Gossip {
-    }
-    class Graft {
-    }
-    class Prune {
-    }
-    class IHave {
-    }
-
-    Gossip gossip;
-    Graft graft;
-    Prune prune;
-    IHave iHave;
+    Boolean isGossip = false;
+    Boolean isGraft  = false;
+    Boolean isPrune  = false;
+    Boolean isIHave  = false;
 
     public String toString() {
         return "@" + Integer.toHexString(System.identityHashCode(this))+"{" +
         "id:" + id + "," + 
         "from:" + fromNodeIndex + "," + 
-        ((gossip != null)? "gossip,":"") +
-        ((graft != null)? "graft,":"") +
-        ((prune != null)? "prune,":"") +
-        ((iHave != null)? "ihave,":"") +
+        (isGossip ? "gossip,": "") +
+        (isGraft  ? "graft," : "") +
+        (isPrune  ? "prune," : "") +
+        (isIHave  ? "ihave," : "") +
         "}";
     }
 }

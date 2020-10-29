@@ -36,16 +36,16 @@ public boolean execute() {
 public static void handleSendMsg(int protocolID, Node from, Node to, Message msg) {
     msgSendStats.add(msg.size);
     PlumtreeMessage pmsg = (PlumtreeMessage) msg;
-    if (pmsg.gossip != null) {
+    if (pmsg.isGossip) {
         gossipStats.add(1);
     }
-    if (pmsg.graft != null) {
+    if (pmsg.isGraft) {
         graftStats.add(1);
     }
-    if (pmsg.prune != null) {
+    if (pmsg.isPrune) {
         pruneStats.add(1);
     }
-    if (pmsg.iHave != null) {
+    if (pmsg.isIHave) {
         ihaveStats.add(1);
     }
  }

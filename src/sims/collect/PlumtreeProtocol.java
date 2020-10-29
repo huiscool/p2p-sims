@@ -79,19 +79,19 @@ public void nextCycle(Node node, int protocolID) {
         PlumtreeObserver.handleRecvMsg(protocolID, from, node, msg);
 
         // handle Gossip
-        if (incoming.gossip != null) {
+        if (incoming.isGossip) {
             handleGossip(linkable, protocolID, from, incoming, outgoing);
         }
         // handle IHave
-        if (incoming.iHave != null ) {
+        if (incoming.isIHave) {
             handleIHave(linkable, protocolID, from, incoming, outgoing);
         }
         // handle Graft
-        if (incoming.graft != null) {
+        if (incoming.isGraft) {
             handleGraft(linkable, protocolID, from, incoming, outgoing);
         }
         // handle Prune
-        if (incoming.prune != null) {
+        if (incoming.isPrune) {
             handlePrune(linkable, protocolID, from, incoming, outgoing);
         }
     }
@@ -138,10 +138,10 @@ private void handleGossip(
         linkable.prune(from);
         
         // send prune
-        outgoing.gossip = null;
-        outgoing.prune = outgoing.new Prune();
-        outgoing.graft = null;
-        outgoing.iHave = null;
+        outgoing.isGossip = false;
+        outgoing.isPrune = true;
+        outgoing.isGraft = false;
+        outgoing.isIHave = false;
         
         PlumtreeProtocol pfrom = (PlumtreeProtocol) from.getProtocol(protocolID);
         pfrom.deliver(outgoing);
@@ -197,7 +197,7 @@ private void handleGraft(
     if (seen.contains(incoming)) {
         // send gossip
         PlumtreeMessage gossipMsg = (PlumtreeMessage) outgoing.clone();
-        gossipMsg.gossip = gossipMsg.new Gossip();
+        gossipMsg.isGossip = true;
 
         PlumtreeProtocol pfrom = (PlumtreeProtocol) from.getProtocol(protocolID);
         pfrom.deliver(gossipMsg);
@@ -236,7 +236,7 @@ private void handleTimeout(
     // send graft message and notify
     PlumtreeMessage outgoing = new PlumtreeMessage();
     outgoing.fromNodeIndex = node.getIndex();
-    outgoing.graft = outgoing.new Graft();
+    outgoing.isGraft = true;
     outgoing.id = msgID;
 
     PlumtreeProtocol pfirst = (PlumtreeProtocol) first.getProtocol(protocolID);
@@ -259,7 +259,7 @@ private void eagerPush(
             continue;
         }
 
-        eagerMsg.gossip = eagerMsg.new Gossip();
+        eagerMsg.isGossip = true;
 
         PlumtreeProtocol p = (PlumtreeProtocol) eager.getProtocol(protocolID);
         p.deliver(eagerMsg);
@@ -284,7 +284,7 @@ private void lazyPush(
             continue;
         }
 
-        lazyMsg.iHave = lazyMsg.new IHave();
+        lazyMsg.isIHave = true;
         // for now we use the origin message id.
 
         PlumtreeProtocol p = (PlumtreeProtocol) lazy.getProtocol(protocolID);

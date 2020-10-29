@@ -40,7 +40,7 @@ public class Message implements Cloneable {
         switch(type) {
             case "plumtree":
                 PlumtreeMessage msg = new PlumtreeMessage();
-                msg.gossip =  msg.new Gossip();
+                msg.isGossip = true;
                 return msg;
             default:
                 return new Message();

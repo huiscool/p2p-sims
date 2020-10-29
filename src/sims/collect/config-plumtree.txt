@@ -1,41 +1,41 @@
 # collect experiments configurations
 
 random.seed 1234567890
-simulation.cycles 30
+simulation.cycles 50
 
-network.size 4
+network.size 10000
 
 # linkable protocol
 protocol.lnk sims.collect.EagerLazyLink
-protocol.lnk.eagercapacity 5
-protocol.lnk.lazycapacity 1
+protocol.lnk.eagercapacity 3
+protocol.lnk.lazycapacity 2
 
 # broadcast protocol
-protocol.broadcast sims.collect.PlumtreeProtocol
-protocol.broadcast.linkable lnk
-protocol.broadcast.ihavetimeout 5 
-protocol.broadcast.grafttimeout 2
+protocol.plumtree sims.collect.PlumtreeProtocol
+protocol.plumtree.linkable lnk
+protocol.plumtree.ihavetimeout 5
+protocol.plumtree.grafttimeout 2
 
 # topology settings
 init.rnd WireKOut
 init.rnd.protocol lnk
-init.rnd.k 20
+init.rnd.k 5
 
 # broadcast controller
 control.bc sims.collect.BroadcastController
-control.bc.protocol broadcast
+control.bc.protocol plumtree
 control.bc.msgtype plumtree
 control.bc.msgnum 1
 control.bc.msgsize 10
 control.bc.begintime 0
-control.bc.period 100
+control.bc.period 20
 
 # churn controller
 control.churn sims.collect.ChurnController
-control.churn.begintime -1
-control.churn.percentage 0.0
+control.churn.begintime 30
+control.churn.percentage 10.0
 
 # observers
 control.bo sims.collect.PlumtreeObserver
-control.bo.protocol broadcast
+control.bo.protocol plumtree
 

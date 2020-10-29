@@ -3,18 +3,16 @@
 random.seed 1234567890
 simulation.cycles 50
 
-control.shf Shuffle
-
 network.size 10000
 
 # we don't manage topology of the overlay network for now.
 # use IdleProtocol.
 protocol.lnk IdleProtocol
 
-# broadcast protocol
-protocol.broadcast sims.collect.GossipProtocol
-protocol.broadcast.linkable lnk
-protocol.broadcast.fanout 3
+# gossip protocol
+protocol.gossip sims.collect.GossipProtocol
+protocol.gossip.linkable lnk
+protocol.gossip.fanout 3
 
 # topology settings
 init.rnd WireKOut
@@ -23,7 +21,7 @@ init.rnd.k 20
 
 # broadcast controller
 control.bc sims.collect.BroadcastController
-control.bc.protocol broadcast
+control.bc.protocol gossip
 control.bc.msgtype gossip 
 control.bc.msgnum 1
 control.bc.msgsize 10
@@ -37,4 +35,5 @@ control.churn.percentage 0.0
 
 # observers
 control.bo sims.collect.BroadcastObserver
+control.bo.protocol gossip
 

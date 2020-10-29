@@ -99,6 +99,7 @@ public void nextCycle(Node node, int protocolID) {
 
     Set<Integer> ihaveTimeoutIDs = ihaveTimer.nextCycle();
     Set<Integer> graftTimeoutIDs = graftTimer.nextCycle();
+
     for(int msgID : ihaveTimeoutIDs) {
         handleTimeout(linkable, protocolID, node, msgID);
     }
@@ -115,6 +116,9 @@ public Object clone() {
         that = (PlumtreeProtocol) super.clone();
         that.mailbox = new LinkedList<>(this.mailbox);
         that.seen = new HashSet<>(this.seen);
+        that.missing = new HashMap<>(this.missing);
+        that.ihaveTimer = (MessageIDTimer) this.ihaveTimer.clone();
+        that.graftTimer = (MessageIDTimer) this.graftTimer.clone();
     } catch(CloneNotSupportedException e){
         e.printStackTrace();
     }
@@ -174,6 +178,7 @@ private void handleIHave(
     PlumtreeMessage incoming,
     PlumtreeMessage outgoing
 ) {
+
     if (seen.contains(incoming)) {
         return;
     }
@@ -224,6 +229,7 @@ private void handleTimeout(
     Node node,
     int msgID
 ) {
+
     // setup timer
     graftTimer.add(msgID);
 
@@ -236,8 +242,11 @@ private void handleTimeout(
     // send graft message and notify
     PlumtreeMessage outgoing = new PlumtreeMessage();
     outgoing.fromNodeIndex = node.getIndex();
-    outgoing.isGraft = true;
     outgoing.id = msgID;
+    outgoing.isGossip = false;
+    outgoing.isGraft = true;
+    outgoing.isPrune = false;
+    outgoing.isIHave = false;
 
     PlumtreeProtocol pfirst = (PlumtreeProtocol) first.getProtocol(protocolID);
     pfirst.deliver(outgoing);
@@ -253,13 +262,16 @@ private void eagerPush(
     PlumtreeMessage outgoing
 )  {
     PlumtreeMessage eagerMsg = (PlumtreeMessage) outgoing.clone();
+    eagerMsg.isGossip = true;
+    eagerMsg.isGraft = false;
+    eagerMsg.isPrune = false;
+    eagerMsg.isIHave = false;
     for(Node eager: linkable.getEagerPeers()) {
         // don't send back to sender
         if (eager.getIndex() == from.getIndex()) {
             continue;
         }
 
-        eagerMsg.isGossip = true;
 
         PlumtreeProtocol p = (PlumtreeProtocol) eager.getProtocol(protocolID);
         p.deliver(eagerMsg);
@@ -278,15 +290,18 @@ private void lazyPush(
     PlumtreeMessage outgoing
 ) {
     PlumtreeMessage lazyMsg = (PlumtreeMessage) outgoing.clone();
+    lazyMsg.isGossip = false;
+    lazyMsg.isGraft = false;
+    lazyMsg.isPrune = false;
+    lazyMsg.isIHave = true;
+
     for(Node lazy: linkable.getLazyPeers()) {
         // don't send back to sender
         if (lazy.getIndex() == from.getIndex()) {
             continue;
         }
 
-        lazyMsg.isIHave = true;
         // for now we use the origin message id.
-
         PlumtreeProtocol p = (PlumtreeProtocol) lazy.getProtocol(protocolID);
         p.deliver(lazyMsg);
 
@@ -341,5 +356,19 @@ class MessageIDTimer {
         Set<Integer> last = messageIDs.pollLast();
         messageIDs.addFirst(new HashSet<Integer>());
         return last;
+    }
+
+    @Override
+    public String toString() {
+        return messageIDs.toString();
+    }
+
+    @Override
+    public Object clone() {
+        MessageIDTimer that = new MessageIDTimer(-1);
+        for (Set<Integer> ids : this.messageIDs) {
+            that.messageIDs.add(new HashSet<>(ids));
+        }
+        return that;
     }
 }

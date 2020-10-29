@@ -29,7 +29,7 @@ public ChurnController(String prefix) {
     beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
     percentage = Configuration.getDouble(prefix + "." + PARAM_PERCENTAGE);
     percentage = percentage <= 0.0 ? 0.0 : percentage;
-    percentage = percentage >= 1.0 ? 1.0 : percentage;
+    percentage = percentage >= 100.0 ? 100.0 : percentage;
 }
 
 /*============================================================================*/
@@ -42,7 +42,7 @@ public boolean execute() {
         return false;
     }
     int n = Network.size();
-    int k = (int)Math.round(percentage*n);
+    int k = (int)Math.round(percentage*n/100.0);
     int[] nodeindexs = Util.pickup(k, n);
     for(int i=0; i<nodeindexs.length; i++) {
         Network.get(nodeindexs[i]).setFailState(Fallible.DEAD);

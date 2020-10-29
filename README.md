@@ -10,6 +10,9 @@
 
 `make pingpong` 简单的pingpong协议
 
-`make boardcasttree` 基于plumtree的仿真
+`make plumtree` 基于plumtree的仿真
 
-`make collect` 基于动态生成树的回收仿真
+`make gossip` 基于gossip的仿真
+
+## 实现方案
+

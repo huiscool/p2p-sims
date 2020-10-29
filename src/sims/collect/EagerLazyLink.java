@@ -116,8 +116,8 @@ public class EagerLazyLink implements Protocol, Linkable {
     public void onKill() {
         eagerCap = 0;
         lazyCap = 0;
-        eagerPeers = null;
-        lazyPeers = null;
+        eagerPeers = new ArrayList<>();
+        lazyPeers = new ArrayList<>();
     }
 
     @Override

@@ -26,6 +26,7 @@ private int msgNum;
 private int msgSize;
 private int period;
 private int beginTime;
+private int counter;
 
 /*============================================================================*/
 // initializations
@@ -38,6 +39,7 @@ public BroadcastController(String prefix) {
     this.msgSize = Configuration.getInt(prefix + "." + PARAM_MSG_SIZE);
     this.period = Configuration.getInt(prefix + "." + PARAM_PERIOD);
     this.beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
+    this.counter = 0;
 }
 
 
@@ -57,7 +59,7 @@ public BroadcastController(String prefix) {
             // generate msg
             Message msg = Message.New(msgType);
             msg.size = this.msgSize;
-            msg.id = i;
+            msg.id = (counter++);
             msg.hop = 0;
             msg.fromNodeIndex = node.getIndex();
             msg.rootNodeIndex = node.getIndex();

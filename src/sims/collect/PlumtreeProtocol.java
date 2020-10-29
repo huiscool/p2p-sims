@@ -203,6 +203,9 @@ private void handleGraft(
         // send gossip
         PlumtreeMessage gossipMsg = (PlumtreeMessage) outgoing.clone();
         gossipMsg.isGossip = true;
+        gossipMsg.isPrune = false;
+        gossipMsg.isGraft = false;
+        gossipMsg.isIHave = false;
 
         PlumtreeProtocol pfrom = (PlumtreeProtocol) from.getProtocol(protocolID);
         pfrom.deliver(gossipMsg);

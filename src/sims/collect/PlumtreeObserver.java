@@ -55,7 +55,7 @@ public boolean execute() {
 }
 
 public static void handleSendMsg(int protocolID, Node from, Node to, Message msg) {
-    msgSendStats.add(msg.size);
+    msgSendStats.add(1);
     PlumtreeMessage pmsg = (PlumtreeMessage) msg;
     if (pmsg.isGossip) {
         gossipStats.add(1);
@@ -72,7 +72,7 @@ public static void handleSendMsg(int protocolID, Node from, Node to, Message msg
  }
  
 public static void handleRecvMsg(int protocolID, Node from, Node to, Message msg) {
-    msgRecvStats.add(msg.size);
+    msgRecvStats.add(1);
     msgHopStats.add(msg.hop);
  }
 

@@ -1,5 +1,7 @@
 package sims.collect;
 
+import peersim.core.*;
+
 // Message is an abstraction of query payload.
 // it can be a request or a response or a control message.
 public class Message implements Cloneable {
@@ -7,8 +9,8 @@ public class Message implements Cloneable {
     public int size;
     public int id;
     public int hop;
-    public int fromNodeIndex;
-    public int rootNodeIndex;
+    public Node root;
+    public Node from;
     public MessageType type;
 
     @Override
@@ -36,19 +38,26 @@ public class Message implements Cloneable {
         }
         return null;
     }
+
+    public Message hopFrom(Node node) {
+        Message next = (Message) this.clone();
+        next.hop++;
+        next.from = node;
+        return next;
+    }
     
-    static Message New(String type) {
+    public static Message New(String type) {
+        Message msg;
         switch(type) {
             case "plumtree":
                 PlumtreeMessage pmsg = new PlumtreeMessage();
                 pmsg.isGossip = true;
-                pmsg.type = MessageType.Request;
-                return pmsg;
+                msg = pmsg;
             default:
-                Message msg = new Message();
-                msg.type = MessageType.Request;
-                return msg;
+                msg = new Message();
         }
+        msg.type = MessageType.Request;
+        return msg;
         
     }
 }
@@ -62,7 +71,7 @@ class PlumtreeMessage extends Message {
     public String toString() {
         return "@" + Integer.toHexString(System.identityHashCode(this))+"{" +
         "id:" + id + "," + 
-        "from:" + fromNodeIndex + "," + 
+        "from:" + from.getIndex() + "," + 
         (isGossip ? "gossip,": "") +
         (isGraft  ? "graft," : "") +
         (isPrune  ? "prune," : "") +

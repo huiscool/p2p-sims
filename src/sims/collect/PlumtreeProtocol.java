@@ -1,7 +1,6 @@
 package sims.collect;
 
 import peersim.cdsim.CDProtocol;
-import peersim.core.Network;
 import peersim.core.Node;
 import peersim.config.*;
 import java.util.*;
@@ -69,11 +68,9 @@ public void nextCycle(Node node, int protocolID) {
 
     for(Message msg : mailbox) {
 
-        Node from = Network.get(msg.fromNodeIndex);
+        Node from = msg.from;
         PlumtreeMessage incoming = (PlumtreeMessage) msg;
-        PlumtreeMessage outgoing = (PlumtreeMessage) incoming.clone();
-        outgoing.fromNodeIndex = node.getIndex();
-        outgoing.hop += 1;
+        PlumtreeMessage outgoing = (PlumtreeMessage) msg.hopFrom(node);
 
         // notify observer
         PlumtreeObserver.handleRecvMsg(protocolID, from, node, msg);
@@ -136,7 +133,7 @@ private void handleGossip(
     PlumtreeMessage outgoing
 ) {
 
-    Node node = Network.get(outgoing.fromNodeIndex);
+    Node node = outgoing.from;
 
     if (seen.contains(incoming)) {
         linkable.prune(from);
@@ -212,7 +209,7 @@ private void handleGraft(
 
         // notify observer
         // node is the sender and from is the receiver.
-        Node node = Network.get(outgoing.fromNodeIndex);
+        Node node = outgoing.from;
         PlumtreeObserver.handleSendMsg(protocolID, node, from, outgoing);
     }
 }
@@ -244,7 +241,7 @@ private void handleTimeout(
 
     // send graft message and notify
     PlumtreeMessage outgoing = new PlumtreeMessage();
-    outgoing.fromNodeIndex = node.getIndex();
+    outgoing.from = node;
     outgoing.id = msgID;
     outgoing.isGossip = false;
     outgoing.isGraft = true;
@@ -281,7 +278,7 @@ private void eagerPush(
 
         // notify observer
         // node is the sender and eager is the receiver.
-        Node node = Network.get(eagerMsg.fromNodeIndex);
+        Node node = eagerMsg.from;
         PlumtreeObserver.handleSendMsg(protocolID, node, eager, eagerMsg);
     }
 }
@@ -310,7 +307,7 @@ private void lazyPush(
 
         // notify observer
         // node is the sender and lazy is the receiver.
-        Node node = Network.get(lazyMsg.fromNodeIndex);
+        Node node = lazyMsg.from;
         PlumtreeObserver.handleSendMsg(protocolID, node, lazy, lazyMsg);
     }
 }

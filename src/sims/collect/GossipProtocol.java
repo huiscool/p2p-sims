@@ -3,7 +3,6 @@ package sims.collect;
 import peersim.cdsim.CDProtocol;
 import peersim.core.IdleProtocol;
 import peersim.core.Linkable;
-import peersim.core.Network;
 import peersim.core.Node;
 import peersim.config.*;
 import java.util.*;
@@ -65,7 +64,7 @@ public void nextCycle(Node node, int protocolID) {
     for (Message incoming : mailbox) {
 
         // notify the observer
-        Node from = Network.get(incoming.fromNodeIndex);
+        Node from = incoming.from;
         BroadcastObserver.handleRecvMsg(protocolID, from, node, incoming);
 
         if (seen.contains(incoming)) {
@@ -74,9 +73,7 @@ public void nextCycle(Node node, int protocolID) {
         seen.add(incoming);
 
         // write an outgoing mail
-        Message outgoing = (Message) incoming.clone();
-        outgoing.hop += 1;
-        outgoing.fromNodeIndex = node.getIndex();
+        Message outgoing = (Message) incoming.hopFrom(node);
 
         Set<Node> neighbors = Util.pickupNeighbors(fanout, linkable);
         for (Node neigh : neighbors) {

@@ -53,6 +53,7 @@ public class Message implements Cloneable {
                 PlumtreeMessage pmsg = new PlumtreeMessage();
                 pmsg.isGossip = true;
                 msg = pmsg;
+                break;
             default:
                 msg = new Message();
         }

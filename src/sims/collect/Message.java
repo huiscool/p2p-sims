@@ -9,6 +9,7 @@ public class Message implements Cloneable {
     public int hop;
     public int fromNodeIndex;
     public int rootNodeIndex;
+    public MessageType type;
 
     @Override
     public int hashCode() {
@@ -39,11 +40,14 @@ public class Message implements Cloneable {
     static Message New(String type) {
         switch(type) {
             case "plumtree":
-                PlumtreeMessage msg = new PlumtreeMessage();
-                msg.isGossip = true;
-                return msg;
+                PlumtreeMessage pmsg = new PlumtreeMessage();
+                pmsg.isGossip = true;
+                pmsg.type = MessageType.Request;
+                return pmsg;
             default:
-                return new Message();
+                Message msg = new Message();
+                msg.type = MessageType.Request;
+                return msg;
         }
         
     }
@@ -65,4 +69,10 @@ class PlumtreeMessage extends Message {
         (isIHave  ? "ihave," : "") +
         "}";
     }
+}
+
+enum MessageType {
+    Request,
+    Response,
+    Control
 }

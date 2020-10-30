@@ -4,9 +4,9 @@ import peersim.config.*;
 import peersim.core.*;
 
 /**
- * QueryHitsInitializer creates several answer nodes all over the network.
+ * QueryInitializer creates several answer nodes all over the network.
  */
-public class QueryHitsInitializer {
+public class QueryInitializer {
 
 /*============================================================================*/
 // parameters
@@ -23,7 +23,7 @@ private int total;
 /*============================================================================*/
 // constructor
 /*============================================================================*/
-public QueryHitsInitializer(String prefix) {
+public QueryInitializer(String prefix) {
     protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
     total = Configuration.getInt(prefix + "." + PARAM_TOTAL);
 }

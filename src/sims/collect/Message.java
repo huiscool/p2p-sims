@@ -12,6 +12,7 @@ public class Message implements Cloneable {
     public Node root;
     public Node from;
     public MessageType type;
+    public int collectedHits;
 
     @Override
     public int hashCode() {
@@ -78,6 +79,51 @@ class PlumtreeMessage extends Message {
         (isPrune  ? "prune," : "") +
         (isIHave  ? "ihave," : "") +
         "}";
+    }
+
+    public PlumtreeMessage SetGraft() {
+        isGossip = false;
+        isGraft  = true;
+        isPrune  = false;
+        isIHave  = false;
+        type     = MessageType.Control;
+        return this;
+    }
+
+    public PlumtreeMessage SetPrune() {
+        isGossip = false;
+        isGraft  = false;
+        isPrune  = true;
+        isIHave  = false;
+        type     = MessageType.Control;
+        return this;
+    }
+
+    public PlumtreeMessage SetIhave() {
+        isGossip = false;
+        isGraft  = false;
+        isPrune  = false;
+        isIHave  = true;
+        type     = MessageType.Control;
+        return this;
+    }
+
+    public PlumtreeMessage SetGossip() {
+        isGossip = true;
+        isGraft  = false;
+        isPrune  = false;
+        isIHave  = false;
+        type     = MessageType.Request;
+        return this;
+    }
+
+    public PlumtreeMessage SetResponse() {
+        isGossip = false;
+        isGraft  = false;
+        isPrune  = false;
+        isIHave  = false;
+        type     = MessageType.Response;
+        return this;
     }
 }
 

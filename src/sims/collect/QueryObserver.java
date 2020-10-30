@@ -5,7 +5,7 @@ import java.util.*;
 import peersim.core.*;
 import peersim.util.IncrementalStats;
 
-public class QueryObserver {
+public class QueryObserver implements Control {
 /*============================================================================*/
 // fields
 /*============================================================================*/
@@ -21,30 +21,39 @@ public QueryObserver(String prefix) {
 // methods
 /*============================================================================*/
 public static void handleNewRequest(Message msg, Node node) {
-    instance.handleNewRequest(msg, node);
+    getInstance().handleNewRequest(msg, node);
 }
-public static void handleQueryHit(Message msg, Node node) {
-    instance.handleQueryHit(msg, node);
-}
-public static void handleSendRequest(Message msg, Node from, Node to) {
-    instance.handleSendRequest(msg, from, to);
-}
+
 public static void handleRecvRequest(Message msg, Node from, Node to) {
-    instance.handleRecvRequest(msg, from, to);
+    getInstance().handleRecvRequest(msg, from, to);
 }
-public static void handleSendResponse(Message msg, Node from, Node to) {
-    instance.handleSendResponse(msg, from, to);
-}
+
 public static void handleRecvResponse(Message msg, Node from, Node to) {
-    instance.handleRecvResponse(msg, from, to);
+    getInstance().handleRecvResponse(msg, from, to);
 }
-public QueryObserverInstance getInstance() {
+
+public static void handleRecvControl(Message msg, Node from, Node to) {
+    getInstance().handleRecvControl(msg, from, to);
+}
+
+public static void handleHit(Message msg, Node node) {
+    getInstance().handleHit(msg, node);
+}
+
+public static QueryObserverInstance getInstance() {
     if (instance == null) {
         instance = new QueryObserverInstance();
     }
     return instance;
 }
 
+public boolean execute() {
+    for(Map.Entry<Integer, QueryStat> entry: getInstance().queryStats.entrySet()) {
+        System.out.println("msgid="+entry.getKey()+","+entry.getValue());
+        System.out.println();
+    }
+    return false;
+}
 
 }
 
@@ -52,73 +61,115 @@ class QueryObserverInstance {
 /*============================================================================*/
 // fields
 /*============================================================================*/
-private HashMap<Integer, QueryStat> queryStats = new HashMap<>();
+public HashMap<Integer, QueryStat> queryStats = new HashMap<>();
 
 /*============================================================================*/
 // methods
 /*============================================================================*/
 public void handleNewRequest(Message msg, Node node) {
-    queryStats.put(msg.id, new QueryStat(node));
+    QueryStat qs = new QueryStat();
+    qs.root = node;
+    qs.sendTime = CommonState.getIntTime();
+    queryStats.put(msg.id, qs);
 }
-public void handleQueryHit(Message msg, Node node) {
-    QueryStat qs = queryStats.get(msg.id);
-    qs.hitStats.add(1);
-}
-public void handleSendRequest(Message msg, Node from, Node to) {
-    assert(msg.type == MessageType.Request);
-    QueryStat qs = queryStats.get(msg.id);
-    qs.sendRequestStats.add(1);
-}
+
 public void handleRecvRequest(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Request);
     QueryStat qs = queryStats.get(msg.id);
-    qs.recvRequestStats.add(1);
-    qs.requestHopStats.add(msg.hop);
+    qs.totalRecvRequest++;
+
     qs.covered.add(to);
+
+    qs.requestHops.add(msg.hop);
 }
-public void handleSendResponse(Message msg, Node from, Node to) {
-    assert(msg.type == MessageType.Response);
-    QueryStat qs = queryStats.get(msg.id);
-    qs.sendResponseStats.add(1);
-}
+
 public void handleRecvResponse(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Response);
     QueryStat qs = queryStats.get(msg.id);
-    qs.recvResponseStats.add(1);
-    if (to == qs.root) {
-        qs.finalResponseStats.add(1);
-        qs.responseHopStats.add(msg.hop);
-    }
+    qs.totalRecvResponse++;
 
+    // handleFinalResponse
+    if (to == qs.root) {
+        qs.finalResponseHops.add(msg.hop);
+
+        int time = CommonState.getIntTime();
+        for (int i=0; i<msg.collectedHits; i++){
+            qs.arriveTimes.add(time);
+        }
+
+    }
+}
+
+public void handleRecvControl(Message msg, Node from, Node to) {
+    assert(msg.type == MessageType.Control);
+    QueryStat qs = queryStats.get(msg.id);
+    qs.totalRecvControl++;
+}
+
+public void handleHit(Message msg, Node node) {
+    QueryStat qs = queryStats.get(msg.id);
+    qs.hits++;
 }
 
 }
 
 class QueryStat {
+public int sendTime;
 public Node root;
-public IncrementalStats sendRequestStats;
-public IncrementalStats recvRequestStats;
-public IncrementalStats sendResponseStats;
-public IncrementalStats recvResponseStats;
-public IncrementalStats finalResponseStats;
-public IncrementalStats requestHopStats;
-public IncrementalStats responseHopStats;
-public IncrementalStats hitStats;
-public HashSet<Node> covered;
-public Boolean success;
 
-public QueryStat(Node n) {
-    root = n;
-    sendRequestStats = new IncrementalStats();
-    recvRequestStats = new IncrementalStats();
-    sendResponseStats = new IncrementalStats();
-    recvResponseStats = new IncrementalStats();
-    finalResponseStats = new IncrementalStats();
-    requestHopStats = new IncrementalStats();
-    responseHopStats = new IncrementalStats();
-    hitStats = new IncrementalStats();
+public HashSet<Node> covered; // how many node receive requests
+public int hits; // how many node are hit;
+public int totalRecvRequest; // how many received requests around the network
+public int totalRecvResponse; // how many received responses around the network
+public int totalRecvControl; // how many received controls around the network
+public IncrementalStats requestHops; // request message hop statistics;
+public IncrementalStats finalResponseHops; // final response message hop statistics;
+public ArrayList<Integer> arriveTimes; // record the time when the i-th result arrived at the root node. The size is how many results that the root node received.
+
+public QueryStat() {
     covered = new HashSet<>();
-    success = false;
+    requestHops = new IncrementalStats();
+    finalResponseHops = new IncrementalStats();
+    arriveTimes = new ArrayList<>();
+}
+
+public String toString() {
+    return String.format(
+        "root=%d, startTime=%d%n",
+        root.getIndex(),
+        sendTime
+    ) + String.format(
+        "req=%d, resp=%d, ctrl=%d%n", 
+        totalRecvRequest,
+        totalRecvResponse,
+        totalRecvControl
+    ) + String.format(
+        "reqHopMax=%f, reqHopAvg=%f, respHopMax=%f, respHopAvg=%f%n",
+        requestHops.getMax(),
+        requestHops.getAverage(),
+        finalResponseHops.getMax(),
+        finalResponseHops.getAverage()
+    ) + String.format(
+        "covered=%d, hits=%d%n", 
+        covered.size(),
+        hits
+    ) + "arrivals=" + arriveTimes.toString();
+}
+
+public boolean success(int hitNeeded) {
+    return hitNeeded <= arriveTimes.size();
+}
+
+public double hopNumber() {
+    return finalResponseHops.getAverage();
+}
+
+public double MessagePerNode() {
+    return (double)(totalRecvRequest + totalRecvResponse + totalRecvControl)/3.0;
+}
+
+public double QueryHits() {
+    return (double) hits;
 }
 
 }

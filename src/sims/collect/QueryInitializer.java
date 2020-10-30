@@ -6,7 +6,7 @@ import peersim.core.*;
 /**
  * QueryInitializer creates several answer nodes all over the network.
  */
-public class QueryInitializer {
+public class QueryInitializer implements Control {
 
 /*============================================================================*/
 // parameters

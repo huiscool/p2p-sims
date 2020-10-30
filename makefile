@@ -25,3 +25,5 @@ gossip:
 plumtree:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree.txt
 
+plumtree-query:
+	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree-query.txt

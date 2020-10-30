@@ -56,6 +56,7 @@ public BroadcastController(String prefix) {
         for(int i=0; i<nodeindexs.length; i++) {
 
             Node node = Network.get(nodeindexs[i]);
+
             // generate msg
             Message msg = Message.New(msgType);
             msg.size = this.msgSize;
@@ -63,6 +64,9 @@ public BroadcastController(String prefix) {
             msg.hop = 0;
             msg.from = node;
             msg.root = node;
+
+            // notify observer
+            QueryObserver.handleNewRequest(msg, node);
 
             // deliver message into their mailboxes
             Deliverable d = (Deliverable) node.getProtocol(this.protocolID);

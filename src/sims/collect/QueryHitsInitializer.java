@@ -12,27 +12,27 @@ public class QueryHitsInitializer {
 // parameters
 /*============================================================================*/
 private static final String PARAM_PROTOCOL = "protocol";
-private static final String PARAM_TOTALHITS = "totalhits";
+private static final String PARAM_TOTAL = "total";
 
 /*============================================================================*/
 // fields
 /*============================================================================*/
 private int protocolID;
-private int totalHits;
+private int total;
 
 /*============================================================================*/
 // constructor
 /*============================================================================*/
 public QueryHitsInitializer(String prefix) {
     protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
-    totalHits = Configuration.getInt(prefix + "." + PARAM_TOTALHITS);
+    total = Configuration.getInt(prefix + "." + PARAM_TOTAL);
 }
 
 /*============================================================================*/
 // methods
 /*============================================================================*/
 public boolean execute() {
-    int[] nodeIndexs = Util.pickup(totalHits, Network.size());
+    int[] nodeIndexs = Util.pickup(total, Network.size());
     for (int i=0; i<nodeIndexs.length; i++) {
         Node n = Network.get(nodeIndexs[i]);
         HitsConfigurable h = (HitsConfigurable) n.getProtocol(protocolID);

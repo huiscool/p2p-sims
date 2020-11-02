@@ -1,7 +1,6 @@
 package sims.collect;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import peersim.cdsim.*;
 import peersim.config.Configuration;
@@ -18,7 +17,7 @@ private static String PARAM_ROUTER = "router";
 /*============================================================================*/
 // fields
 /*============================================================================*/
-private Set<Message> mailbox;
+private List<Message> mailbox;
 
 private int routerID;
 
@@ -28,7 +27,7 @@ private boolean isHit;
 // constructor
 /*============================================================================*/
 public CollectProtocol(String prefix) {
-    mailbox = new HashSet<>();
+    mailbox = new LinkedList<>();
     routerID = Configuration.getPid(prefix + "." + PARAM_ROUTER);
     isHit = false;
    
@@ -57,10 +56,10 @@ public void nextCycle(Node node, int protocolID) {
             case Response:
                 QueryObserver.handleRecvResponse(msg, msg.from, node);
                 handleResponse(router, protocolID, msg.from, node, msg);
+                break;
             case Control:
             case Request:
             default:
-
         }
     }
     mailbox.clear();
@@ -77,10 +76,11 @@ public void handleRequest(Node node, Message msg) {
         Node to = router.GetFather(msg);
         CollectProtocol pto = (CollectProtocol) Util.GetNodeProtocol(to, CollectProtocol.class);
 
-        Message outgoing = (Message) msg.clone();
+        Message outgoing = (Message) msg.hopFrom(node);
         outgoing.type = MessageType.Response;
         outgoing.collectedHits = 1;
         pto.deliver(outgoing);
+        // System.out.printf("hit: %d->%d%n", node.getIndex(), to.getIndex());
     }
 }
 
@@ -94,7 +94,7 @@ public Object clone() {
     try {
         CollectProtocol that = (CollectProtocol) super.clone();
         that.isHit = this.isHit;
-        that.mailbox = new HashSet<>(this.mailbox);
+        that.mailbox = new LinkedList<>(this.mailbox);
         return that;
     }catch(CloneNotSupportedException e) {
         e.printStackTrace();

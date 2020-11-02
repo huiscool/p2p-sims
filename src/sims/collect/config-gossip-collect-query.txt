@@ -1,9 +1,9 @@
 # collect experiments configurations
 
-random.seed 1234567890
-simulation.cycles 10
+random.seed 1234567891
+simulation.cycles 40
 
-network.size 3
+network.size 1000
 
 # linkable protocol
 protocol.lnk IdleProtocol
@@ -11,7 +11,7 @@ protocol.lnk IdleProtocol
 # broadcast protocol
 protocol.gossip sims.collect.GossipQueryProtocol
 protocol.gossip.linkable lnk
-protocol.gossip.fanout 3
+protocol.gossip.fanout 5
 
 
 # collect protocol
@@ -31,7 +31,7 @@ control.bc.msgnum 1
 control.bc.msgsize 10
 control.bc.begintime 0
 control.bc.period 10
-control.bc.strategy fix-period
+control.bc.strategy random-period
 
 # churn controller
 control.churn sims.collect.ChurnController

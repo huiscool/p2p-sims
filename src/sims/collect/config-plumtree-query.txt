@@ -28,7 +28,7 @@ control.bc.msgtype plumtree
 control.bc.msgnum 1
 control.bc.msgsize 10
 control.bc.begintime 0
-control.bc.period 20
+control.bc.period 10
 control.bc.strategy fix-period
 
 # churn controller

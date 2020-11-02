@@ -91,17 +91,6 @@ public void handleRecvResponse(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Response);
     QueryStat qs = queryStats.get(msg.id);
     qs.totalRecvResponse++;
-
-    // handleFinalResponse
-    if (to == qs.root) {
-        qs.finalResponseHops.add(msg.hop);
-
-        int time = CommonState.getIntTime();
-        for (int i=0; i<msg.collectedHits; i++){
-            qs.arriveTimes.add(time);
-        }
-
-    }
 }
 
 public void handleRecvControl(Message msg, Node from, Node to) {
@@ -112,12 +101,17 @@ public void handleRecvControl(Message msg, Node from, Node to) {
 
 public void handleHit(Message msg, Node node) {
     QueryStat qs = queryStats.get(msg.id);
-    qs.hits++;
+    qs.hits.add(node);
 }
 
 public void handleQuerySuccess(Message msg, Node node) {
     QueryStat qs = queryStats.get(msg.id);
-    qs.arriveTimes.add(CommonState.getIntTime());
+    qs.finalResponseHops.add(msg.hop);
+
+    int t = CommonState.getIntTime();
+    for (int i=0; i<msg.collectedHits; i++) {
+        qs.arriveTimes.add(t);
+    }
 }
 
 }
@@ -127,7 +121,7 @@ public int sendTime;
 public Node root;
 
 public HashSet<Node> covered; // how many node receive requests
-public int hits; // how many node are hit;
+public HashSet<Node> hits; // how many node are hit
 public int totalRecvRequest; // how many received requests around the network
 public int totalRecvResponse; // how many received responses around the network
 public int totalRecvControl; // how many received controls around the network
@@ -137,6 +131,7 @@ public ArrayList<Integer> arriveTimes; // record the time when the i-th result a
 
 public QueryStat() {
     covered = new HashSet<>();
+    hits = new HashSet<>();
     requestHops = new IncrementalStats();
     finalResponseHops = new IncrementalStats();
     arriveTimes = new ArrayList<>();
@@ -161,7 +156,7 @@ public String toString() {
     ) + String.format(
         "covered=%d, hits=%d%n", 
         covered.size(),
-        hits
+        hits.size()
     ) + "arrivals=" + arriveTimes.toString();
 }
 
@@ -178,7 +173,7 @@ public double MessagePerNode() {
 }
 
 public double QueryHits() {
-    return (double) hits;
+    return (double) hits.size();
 }
 
 }

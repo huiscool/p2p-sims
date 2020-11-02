@@ -88,10 +88,10 @@ public void nextCycle(Node node, int protocolID) {
                 // handle Gossip
                 if (incoming.isGossip) {
                     QueryObserver.handleRecvRequest(incoming, incoming.from, node);
-                    handleGossip(linkable, protocolID, from, node, incoming);
                     if (isHit) {
                         QueryObserver.handleHit(incoming, node);
                     }
+                    handleGossip(linkable, protocolID, from, node, incoming);
                 }
                 break;
             case Response:
@@ -300,23 +300,37 @@ private void eagerPush(
             continue;
         }
 
-
         PlumtreeQueryProtocol p = (PlumtreeQueryProtocol) eager.getProtocol(protocolID);
         p.deliver(eagerMsg);
 
         curChildren.add(eager);
     }
 
+    // response handle
+    PlumtreeMessage resp = (PlumtreeMessage) incoming.clone();
+    resp.from = node;
+    resp.SetResponse();
+    resp.collectedHits = isHit ? 1 : 0;
+
     // set children and father
     children.put(incoming.id, curChildren);
     fathers.put(incoming.id, from);
+
+    // System.out.println(node.getIndex());
+    // System.out.println("curChildren");
+    // System.out.println("children:"+ children);
+    // System.out.println("fathers:"+ fathers);
     
-    // add local response
-    PlumtreeMessage resp = (PlumtreeMessage) incoming.clone();
-    incoming.from = node;
-    resp.SetResponse();
-    resp.collectedHits = isHit ? 1 : 0;
+    // // for leaf node, trigger send back
+    if ( curChildren.size() == 0 ) {
+        PlumtreeQueryProtocol pfrom = (PlumtreeQueryProtocol) from.getProtocol(protocolID);
+        pfrom.deliver(resp);
+        return;
+    }
+
+    // // add local response
     responses.put(incoming.id, resp);
+
 }
 
 private void lazyPush(
@@ -351,7 +365,7 @@ private void handleResponse(
     Set<Node> expectedChildren = children.get(incoming.id);
     Node father = fathers.get(incoming.id);
     Message resp = responses.get(incoming.id);
-    
+
     // update children and resp
     expectedChildren.remove(from);
     resp.hop = Math.max(resp.hop, incoming.hop);
@@ -361,9 +375,8 @@ private void handleResponse(
     if (incoming.root == node) {
         if (expectedChildren.size() == 0) {
             // notify observer
-            QueryObserver.handleQuerySuccess(incoming, node);
+            QueryObserver.handleQuerySuccess(resp, node);
         }
-
         return;
     }
     

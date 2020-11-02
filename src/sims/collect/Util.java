@@ -1,6 +1,7 @@
 package sims.collect;
 
 import java.util.*;
+import java.lang.Class;
 import peersim.core.*;
 
 public class Util {
@@ -28,6 +29,16 @@ public class Util {
             out[i] = tmp;
         }
         return Arrays.copyOfRange(out, 0, k);
+    }
+
+    static Protocol GetNodeProtocol(Node node, Class<?> c) {
+        for (int i =0; i<node.protocolSize(); i++) {
+            Protocol cand = node.getProtocol(i);
+            if (c.isInstance(cand)){
+                return cand;
+            }
+        }
+        return null;
     }
 
 }

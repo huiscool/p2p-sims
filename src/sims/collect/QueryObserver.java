@@ -91,6 +91,14 @@ public void handleRecvResponse(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Response);
     QueryStat qs = queryStats.get(msg.id);
     qs.totalRecvResponse++;
+
+    if (msg.root == to) {
+        qs.finalResponseHops.add(msg.hop);
+        int t = CommonState.getIntTime();
+        for (int i=0; i<msg.collectedHits; i++) {
+            qs.arriveTimes.add(t);
+        }
+    }
 }
 
 public void handleRecvControl(Message msg, Node from, Node to) {
@@ -105,13 +113,8 @@ public void handleHit(Message msg, Node node) {
 }
 
 public void handleQuerySuccess(Message msg, Node node) {
-    QueryStat qs = queryStats.get(msg.id);
-    qs.finalResponseHops.add(msg.hop);
-
-    int t = CommonState.getIntTime();
-    for (int i=0; i<msg.collectedHits; i++) {
-        qs.arriveTimes.add(t);
-    }
+    // QueryStat qs = queryStats.get(msg.id);
+    
 }
 
 }

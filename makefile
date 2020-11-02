@@ -27,3 +27,6 @@ plumtree:
 
 plumtree-query:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree-query.txt
+
+gossip-collect-query:
+	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-gossip-collect-query.txt

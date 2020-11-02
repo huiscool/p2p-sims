@@ -27,6 +27,7 @@ control.bc.msgnum 1
 control.bc.msgsize 10
 control.bc.begintime 5
 control.bc.period 20
+control.bc.strategy fix-period
 
 # churn controller
 control.churn sims.collect.ChurnController

@@ -204,7 +204,7 @@ private void handleGossip(
     lazyPush(linkable, protocolID, from, node, incoming);
     
     // don't graft myself
-    if (from.getIndex() != node.getIndex()) {
+    if (from != node) {
         // graft
         linkable.graft(from);
     }
@@ -296,7 +296,7 @@ private void eagerPush(
 
     for(Node eager: linkable.getEagerPeers()) {
         // don't send back to sender
-        if (eager.getIndex() == from.getIndex()) {
+        if (eager == from) {
             continue;
         }
 
@@ -316,12 +316,7 @@ private void eagerPush(
     children.put(incoming.id, curChildren);
     fathers.put(incoming.id, from);
 
-    // System.out.println(node.getIndex());
-    // System.out.println("curChildren");
-    // System.out.println("children:"+ children);
-    // System.out.println("fathers:"+ fathers);
-    
-    // // for leaf node, trigger send back
+    // for leaf node, trigger send back
     if ( curChildren.size() == 0 ) {
         PlumtreeQueryProtocol pfrom = (PlumtreeQueryProtocol) from.getProtocol(protocolID);
         pfrom.deliver(resp);
@@ -345,7 +340,7 @@ private void lazyPush(
 
     for(Node lazy: linkable.getLazyPeers()) {
         // don't send back to sender
-        if (lazy.getIndex() == from.getIndex()) {
+        if (lazy == from) {
             continue;
         }
 

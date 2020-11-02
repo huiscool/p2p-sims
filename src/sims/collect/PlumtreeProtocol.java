@@ -163,7 +163,7 @@ private void handleGossip(
     lazyPush(linkable, protocolID, from, outgoing);
     
     // don't graft myself
-    if (from.getIndex() != node.getIndex()) {
+    if (from != node) {
         // graft
         linkable.graft(from);
     }
@@ -268,7 +268,7 @@ private void eagerPush(
     eagerMsg.isIHave = false;
     for(Node eager: linkable.getEagerPeers()) {
         // don't send back to sender
-        if (eager.getIndex() == from.getIndex()) {
+        if (eager == from) {
             continue;
         }
 
@@ -297,7 +297,7 @@ private void lazyPush(
 
     for(Node lazy: linkable.getLazyPeers()) {
         // don't send back to sender
-        if (lazy.getIndex() == from.getIndex()) {
+        if (lazy == from) {
             continue;
         }
 

@@ -83,20 +83,23 @@ public void nextCycle(Node node, int protocolID) {
         Node from = msg.from;
         PlumtreeMessage incoming = (PlumtreeMessage) msg;
 
-        // notify observer
-        PlumtreeObserver.handleRecvMsg(protocolID, from, node, msg);
-
         switch (incoming.type) {
             case Request:
                 // handle Gossip
                 if (incoming.isGossip) {
+                    QueryObserver.handleRecvRequest(incoming, incoming.from, node);
                     handleGossip(linkable, protocolID, from, node, incoming);
+                    if (isHit) {
+                        QueryObserver.handleHit(incoming, node);
+                    }
                 }
                 break;
             case Response:
+                QueryObserver.handleRecvResponse(incoming, incoming.from, node);
                 handleResponse(linkable, protocolID, from, node, incoming);
                 break;
             case Control:
+                QueryObserver.handleRecvControl(incoming, incoming.from, node);
                 // handle IHave
                 if (incoming.isIHave) {
                     handleIHave(linkable, protocolID, from, node, incoming);
@@ -187,8 +190,6 @@ private void handleGossip(
         PlumtreeQueryProtocol pfrom = (PlumtreeQueryProtocol) from.getProtocol(protocolID);
         pfrom.deliver(outgoing);
 
-        // notify
-        PlumtreeObserver.handleSendMsg(protocolID, node, from, outgoing);
         return;
     }
     seen.put(incoming.id, incoming);
@@ -243,9 +244,6 @@ private void handleGraft(
         PlumtreeQueryProtocol pfrom = (PlumtreeQueryProtocol) from.getProtocol(protocolID);
         pfrom.deliver(gossipMsg);
 
-        // notify observer
-        // node is the sender and from is the receiver.
-        PlumtreeObserver.handleSendMsg(protocolID, node, from, gossipMsg);
     }
 }
 private void handlePrune(
@@ -283,8 +281,6 @@ private void handleTimeout(
     PlumtreeQueryProtocol pfirst = (PlumtreeQueryProtocol) first.getProtocol(protocolID);
     pfirst.deliver(outgoing);
 
-    PlumtreeObserver.handleSendMsg(protocolID, node, first, outgoing);
-
 }
 
 private void eagerPush(
@@ -307,9 +303,6 @@ private void eagerPush(
 
         PlumtreeQueryProtocol p = (PlumtreeQueryProtocol) eager.getProtocol(protocolID);
         p.deliver(eagerMsg);
-
-        // notify observer
-        PlumtreeObserver.handleSendMsg(protocolID, node, eager, eagerMsg);
 
         curChildren.add(eager);
     }
@@ -345,9 +338,6 @@ private void lazyPush(
         // for now we use the origin message id.
         PlumtreeQueryProtocol p = (PlumtreeQueryProtocol) lazy.getProtocol(protocolID);
         p.deliver(lazyMsg);
-
-        // notify observer
-        PlumtreeObserver.handleSendMsg(protocolID, node, lazy, lazyMsg);
     }
 }
 
@@ -371,6 +361,7 @@ private void handleResponse(
     if (incoming.root == node) {
         if (expectedChildren.size() == 0) {
             // notify observer
+            QueryObserver.handleQuerySuccess(incoming, node);
         }
 
         return;

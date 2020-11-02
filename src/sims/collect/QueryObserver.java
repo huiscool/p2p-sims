@@ -40,6 +40,10 @@ public static void handleHit(Message msg, Node node) {
     getInstance().handleHit(msg, node);
 }
 
+public static void handleQuerySuccess(Message msg, Node node) {
+    getInstance().handleQuerySuccess(msg, node);
+}
+
 public static QueryObserverInstance getInstance() {
     if (instance == null) {
         instance = new QueryObserverInstance();
@@ -109,6 +113,11 @@ public void handleRecvControl(Message msg, Node from, Node to) {
 public void handleHit(Message msg, Node node) {
     QueryStat qs = queryStats.get(msg.id);
     qs.hits++;
+}
+
+public void handleQuerySuccess(Message msg, Node node) {
+    QueryStat qs = queryStats.get(msg.id);
+    qs.arriveTimes.add(CommonState.getIntTime());
 }
 
 }

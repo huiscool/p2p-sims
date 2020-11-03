@@ -26,9 +26,7 @@ control.bc sims.collect.BroadcastController
 control.bc.protocol plumtree
 control.bc.msgtype plumtree
 control.bc.msgnum 1
-control.bc.msgsize 10
-control.bc.begintime 0
-control.bc.period 20
+control.bc.schedule 0, 20
 control.bc.strategy fix-period
 
 # churn controller

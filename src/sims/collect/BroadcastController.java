@@ -3,6 +3,7 @@ package sims.collect;
 import peersim.config.Configuration;
 import peersim.core.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class BroadcastController implements Control {
@@ -14,9 +15,7 @@ public class BroadcastController implements Control {
 private static final String PARAM_PROTOCOL = "protocol";
 private static final String PARAM_MSG_TYPE = "msgtype";
 private static final String PARAM_MSG_NUM = "msgnum";
-private static final String PARAM_MSG_SIZE = "msgsize";
-private static final String PARAM_PERIOD = "period";
-private static final String PARAM_BEGIN_TIME = "begintime";
+private static final String PARAM_SCHEDULE = "schedule";
 private static final String PARAM_STRATEGY = "strategy";
 
 /*============================================================================*/
@@ -25,9 +24,8 @@ private static final String PARAM_STRATEGY = "strategy";
 private int protocolID;
 private String msgType;
 private int msgNum;
-private int msgSize;
-private int period;
-private int beginTime;
+private ArrayList<Integer> schedule;
+private int scheduleIndex;
 private String strategy;
 
 private int counter;
@@ -41,10 +39,15 @@ public BroadcastController(String prefix) {
     this.protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
     this.msgType = Configuration.getString(prefix + "." + PARAM_MSG_TYPE);
     this.msgNum = Configuration.getInt(prefix + "." + PARAM_MSG_NUM);
-    this.msgSize = Configuration.getInt(prefix + "." + PARAM_MSG_SIZE);
-    this.period = Configuration.getInt(prefix + "." + PARAM_PERIOD);
-    this.beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
     this.strategy = Configuration.getString(prefix + "." + PARAM_STRATEGY);
+
+    String strSchedule = Configuration.getString(prefix + "." + PARAM_SCHEDULE);
+    this.schedule = new ArrayList<>();
+    for(String s : strSchedule.split("\s*,\s*") ) {
+        schedule.add(Integer.parseInt(s));
+    }
+
+    this.scheduleIndex = 0;
     this.counter = 0;
     this.fixedNodeIndices = Util.pickup(msgNum, Network.size());
 }
@@ -65,7 +68,7 @@ public boolean execute() {
 }
 
 private boolean randomPeriod() {
-    if ((CommonState.getTime() - this.beginTime) % this.period != 0) {
+    if (!scheduleOK()) {
         return false;
     }
     // pickup some nodes and deliver messages to their mailbox
@@ -76,7 +79,6 @@ private boolean randomPeriod() {
 
         // generate msg
         Message msg = Message.New(msgType);
-        msg.size = this.msgSize;
         msg.id = (counter++);
         msg.hop = 0;
         msg.from = node;
@@ -94,7 +96,7 @@ private boolean randomPeriod() {
 }
 
 private boolean fixPeriod() {
-    if ((CommonState.getTime() - this.beginTime) % this.period != 0) {
+    if (!scheduleOK()) {
         return false;
     }
     // pickup some nodes and deliver messages to their mailbox
@@ -104,7 +106,6 @@ private boolean fixPeriod() {
 
         // generate msg
         Message msg = Message.New(msgType);
-        msg.size = this.msgSize;
         msg.id = (counter++);
         msg.hop = 0;
         msg.from = node;
@@ -119,6 +120,15 @@ private boolean fixPeriod() {
     }
     System.out.println("send to:" + Arrays.toString(fixedNodeIndices));
     return false;
+}
+
+private boolean scheduleOK() {
+    if ( scheduleIndex >= schedule.size() || 
+         CommonState.getTime() != this.schedule.get(scheduleIndex) ) {
+        return false;
+    }
+    scheduleIndex++;
+    return true;
 }
 
 }

@@ -7,7 +7,6 @@ import java.util.*;
 
 import com.alibaba.fastjson.*;
 import com.alibaba.fastjson.annotation.*;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import peersim.config.Configuration;
 import peersim.core.*;
@@ -89,7 +88,7 @@ public static QueryObserverInstance getInstance() {
 
 public boolean execute() {
     String json = JSON.toJSONString(getInstance());
-    System.out.println(json);
+    // System.out.println(json);
     try {
         FileWriter w = new FileWriter(logFile, true);
         w.write(json);
@@ -162,6 +161,9 @@ public void handleRecvResponse(Message msg, Node from, Node to) {
         for (int i=0; i<msg.collectedHits; i++) {
             qs.arriveTimes.add(t);
         }
+        for (int i=0; i<msg.collectedHits; i++) {
+            qs.arriveHops.add(msg.hop);
+        }
     }
 }
 
@@ -190,6 +192,7 @@ public int totalRecvRequest; // how many received requests around the network
 public int totalRecvResponse; // how many received responses around the network
 public int totalRecvControl; // how many received controls around the network
 public ArrayList<Integer> arriveTimes; // record the time when the i-th result arrived at the root node. The size is how many results that the root node received.
+public ArrayList<Integer> arriveHops;
 
 @JSONField(serialize = false)
 public IncrementalStats requestHops; // request message hop statistics;
@@ -245,6 +248,7 @@ public QueryStat() {
     requestHops = new IncrementalStats();
     finalResponseHops = new IncrementalStats();
     arriveTimes = new ArrayList<>();
+    arriveHops = new ArrayList<>();
 }
 
 public String toString() {

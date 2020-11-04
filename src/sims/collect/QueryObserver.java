@@ -88,7 +88,7 @@ public static QueryObserverInstance getInstance() {
 
 public boolean execute() {
     String json = JSON.toJSONString(getInstance());
-    // System.out.println(json);
+    System.out.println(json);
     try {
         FileWriter w = new FileWriter(logFile, true);
         w.write(json);
@@ -147,6 +147,8 @@ public void handleRecvRequest(Message msg, Node from, Node to) {
 
     qs.covered.add(to);
 
+    int cnt = qs.reqHopCounter.getOrDefault(msg.hop, 0);
+    qs.reqHopCounter.put(msg.hop, cnt+1);
     qs.requestHops.add(msg.hop);
 }
 
@@ -186,18 +188,20 @@ public void handleQuerySuccess(Message msg, Node node) {
 class QueryStat {
 public int sendTime;
 public Node root;
-public HashSet<Node> covered; // how many node receive requests
-public HashSet<Node> hits; // how many node are hit
+public HashSet<Node> covered; // how many nodes receive requests
+public HashSet<Node> hits; // how many nodes are hit
 public int totalRecvRequest; // how many received requests around the network
 public int totalRecvResponse; // how many received responses around the network
 public int totalRecvControl; // how many received controls around the network
 public ArrayList<Integer> arriveTimes; // record the time when the i-th result arrived at the root node. The size is how many results that the root node received.
-public ArrayList<Integer> arriveHops;
+public ArrayList<Integer> arriveHops; // record the i-th result's hop.
 
 @JSONField(serialize = false)
 public IncrementalStats requestHops; // request message hop statistics;
 @JSONField(serialize = false)
 public IncrementalStats finalResponseHops; // final response message hop statistics;
+
+public HashMap<Integer, Integer> reqHopCounter; // record the node number of specified hops.
 
 /*============================================================================*/
 // JSON getter
@@ -238,6 +242,25 @@ public double getRespAvgHops() {
     return finalResponseHops.getAverage();
 }
 
+@JSONField(name = "reqHopCounter")
+public JSONArray getReqHopCounter() {
+    // get hops upper bound
+    int upper = 0;
+    for (Map.Entry<Integer, Integer> entry: reqHopCounter.entrySet()) {
+        upper = (int) Math.max(upper, entry.getKey());
+    }
+    JSONArray out = new JSONArray();
+    for (int i=0; i<upper; i++) {
+        Integer cnt = reqHopCounter.get(i);
+        if (cnt != null) {
+            out.add(cnt);
+            continue;
+        }
+        out.add(0);
+    }
+    return out;
+}
+
 /*============================================================================*/
 // methods
 /*============================================================================*/
@@ -249,26 +272,7 @@ public QueryStat() {
     finalResponseHops = new IncrementalStats();
     arriveTimes = new ArrayList<>();
     arriveHops = new ArrayList<>();
-}
-
-public String toString() {
-    return JSON.toJSONString(this);
-}
-
-public boolean success(int hitNeeded) {
-    return hitNeeded <= arriveTimes.size();
-}
-
-public double hopNumber() {
-    return finalResponseHops.getAverage();
-}
-
-public double MessagePerNode() {
-    return (double)(totalRecvRequest + totalRecvResponse + totalRecvControl)/3.0;
-}
-
-public double QueryHits() {
-    return (double) hits.size();
+    reqHopCounter = new HashMap<>();
 }
 
 }

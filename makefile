@@ -1,4 +1,5 @@
 zipname=peersim-1.0.5.zip
+fastjsonname=fastjson.jar
 LIB_JARS=`find -L lib/ -name "*.jar" | tr [:space:] :`
 
 build:
@@ -9,8 +10,10 @@ build:
 download:
 	rm -rf lib
 	wget -O $(zipname) https://sourceforge.net/projects/peersim/files/peersim-1.0.5.zip/download
+	wget -O $(fastjsonname) https://search.maven.org/remote_content\?g\=com.alibaba\&a\=fastjson\&v\=LATEST
 	unzip $(zipname) "*.jar"
 	mv $(basename $(zipname)) lib
+	mv $(fastjsonname) lib
 	rm $(zipname)
 
 pingpong:

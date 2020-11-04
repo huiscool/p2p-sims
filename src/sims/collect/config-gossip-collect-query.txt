@@ -3,12 +3,12 @@
 random.seed 1234567891
 simulation.cycles 40
 
-network.size 1000
+network.size 10000
 
 # linkable protocol
 protocol.lnk IdleProtocol
 
-# broadcast protocol
+# query protocol
 protocol.gossip sims.collect.GossipQueryProtocol
 protocol.gossip.linkable lnk
 protocol.gossip.fanout 5
@@ -39,7 +39,8 @@ control.churn.percentage 10.0
 # query initializer
 init.qi sims.collect.QueryInitializer
 init.qi.protocol collect
-init.qi.total 12
+init.qi.total 20
 
 # observers
 control.qo sims.collect.QueryObserver
+control.qo.logpath ./example.log

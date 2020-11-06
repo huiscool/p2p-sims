@@ -1,0 +1,46 @@
+# collect experiments configurations
+
+random.seed ${seed}
+simulation.cycles ${cycle}
+
+network.size ${netsize}
+
+# linkable protocol
+protocol.lnk IdleProtocol
+
+# query protocol
+protocol.gossip sims.collect.GossipQueryProtocol
+protocol.gossip.linkable lnk
+protocol.gossip.fanout 5
+
+
+# collect protocol
+protocol.collect sims.collect.CollectProtocol
+protocol.collect.router gossip
+
+# topology settings
+init.rnd WireKOut
+init.rnd.protocol lnk
+init.rnd.k ${kout}
+
+# broadcast controller
+control.bc sims.collect.BroadcastController
+control.bc.protocol gossip
+control.bc.msgtype gossip
+control.bc.msgnum ${bc_msgnum}
+control.bc.schedule ${bc_schedule}
+control.bc.strategy fix-period
+
+# churn controller
+control.churn sims.collect.ChurnController
+control.churn.begintime -1
+control.churn.percentage 10.0
+
+# query initializer
+init.qi sims.collect.QueryInitializer
+init.qi.protocol collect
+init.qi.total ${qi_total}
+
+# observers
+control.qo sims.collect.QueryObserver
+control.qo.logpath ${qo_logpath}

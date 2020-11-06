@@ -1,0 +1,44 @@
+# collect experiments configurations
+
+random.seed ${seed}
+simulation.cycles ${cycle}
+
+network.size ${netsize}
+
+# linkable protocol
+protocol.lnk sims.collect.EagerLazyLink
+protocol.lnk.eagercapacity 3
+protocol.lnk.lazycapacity 2
+
+# query protocol
+protocol.plumtree sims.collect.PlumtreeQueryProtocol
+protocol.plumtree.linkable lnk
+protocol.plumtree.ihavetimeout 5
+protocol.plumtree.grafttimeout 2
+
+# topology settings
+init.rnd WireKOut
+init.rnd.protocol lnk
+init.rnd.k ${kout}
+
+# broadcast controller
+control.bc sims.collect.BroadcastController
+control.bc.protocol plumtree
+control.bc.msgtype plumtree
+control.bc.msgnum ${bc_msgnum}
+control.bc.schedule ${bc_schedule}
+control.bc.strategy fix-period
+
+# churn controller
+control.churn sims.collect.ChurnController
+control.churn.begintime -1
+control.churn.percentage 10.0
+
+# query initializer
+init.qi sims.collect.QueryInitializer
+init.qi.protocol plumtree
+init.qi.total ${qi_total}
+
+# observers
+control.qo sims.collect.QueryObserver
+control.qo.logpath ${qo_logpath}

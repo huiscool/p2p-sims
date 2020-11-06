@@ -29,7 +29,7 @@ control.bc.protocol gossip
 control.bc.msgtype gossip
 control.bc.msgnum ${bc_msgnum}
 control.bc.schedule ${bc_schedule}
-control.bc.strategy fix-period
+control.bc.strategy ${strategy}
 
 # churn controller
 control.churn sims.collect.ChurnController

@@ -23,10 +23,10 @@ methods = [
 ]
 
 globalConfigs = {
-    "seed" : [1],
+    "seed" : [100],
     "cycle" : [60],
-    "netsize" : [10000],
-    "kout": [5],
+    "netsize" : [1000],
+    "kout": [7],
     "bc_msgnum" : [1],
     "bc_schedule" : ["0,20"],
     "qi_total" : [20],
@@ -34,10 +34,17 @@ globalConfigs = {
         "config-plumtree-query.txt",
         "config-gossip-collect-query.txt"
     ],
-    # "qo_logpath": dynamic log path
+    "strategy": [
+        "fix-period",
+        "random-period"
+    ]
 }
 
-
+figs = [
+    'figRespHop',
+    'figHopDist'
+]
+colors = 'bgrcmyk'
 
 ################################################################################
 # global
@@ -45,14 +52,18 @@ globalConfigs = {
 
 cleanupList = []
 
-currentFig = 'figHop'
-colors = 'bgrcmyk'
+currentFig = figs[0]
 
 # fig.1 the response hops
-figHop = plt.figure(1)
+figRespHop = plt.figure(1)
 plt.title("回复跳数变化趋势")
-plt.xlabel("获取到的回复数")
+plt.xlabel("获取到的回复编号")
 plt.ylabel("跳数")
+
+figHopDist = plt.figure(2)
+plt.title("请求跳数分布")
+plt.xlabel("跳数")
+plt.ylabel("节点数")
 
 ################################################################################
 # analysis
@@ -70,29 +81,69 @@ def analyzeLog(path: str, config: dict, configs: dict):
     analyzeLastLog(logs[-1], config, configs)
 
 def analyzeLastLog(jsonLog: dict, config: dict, configs: dict):
-    if currentFig == 'figHop':
-        analyzeFigHop(jsonLog, config, configs)
+    if currentFig == 'figRespHop':
+        analyzeFigRespHop(jsonLog, config, configs)
+        return
+    if currentFig == 'figHopDist':
+        analyzeFigHopDist(jsonLog, config, configs)
+        return
 
-def analyzeFigHop(jsonLog: dict, config: dict, configs: dict):
+def analyzeFigRespHop(jsonLog: dict, config: dict, configs: dict):
     plt.figure(1)
-    lastLog = jsonLog["queryStats"][1]
-    hops = lastLog["stat"]["arriveHops"]
+    hops = jsonLog["queryStats"][1]["stat"]["arriveHops"]
+
     X = numpy.arange(1, 1+len(hops))
-    color = colors[analyzeFigHop.index]
+    color = colors[analyzeFigRespHop.index]
 
     plt.plot(X, hops, color+'o')
     plt.plot(X, hops, color)
-    plt.ylim(0, max(hops)+5)
+
+    if not hops:
+        analyzeFigRespHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigRespHop.index]))
+        analyzeFigRespHop.index += 1
+        print("no response")
+        return
+
+
+    analyzeFigRespHop.maxy = max(analyzeFigRespHop.maxy, max(hops))
+    plt.ylim(0, analyzeFigRespHop.maxy+5)
     plt.xlim(0, 1+len(hops))
     ax = plt.gca()
     ax.xaxis.set_major_locator(plt.MultipleLocator(1))
     ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
     
-    analyzeFigHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigHop.index]))
-    analyzeFigHop.index += 1
+    analyzeFigRespHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigRespHop.index]))
+    analyzeFigRespHop.index += 1
 
-analyzeFigHop.index = 0
-analyzeFigHop.legend = []
+analyzeFigRespHop.index = 0
+analyzeFigRespHop.legend = []
+analyzeFigRespHop.maxy = 0
+
+def analyzeFigHopDist(jsonLog: dict, config: dict, configs: dict):
+    plt.figure(2)
+    hops = jsonLog["queryStats"][1]["stat"]["reqHopCounter"]
+    print(hops)
+    X = numpy.arange(0, len(hops))
+    color = colors[analyzeFigHopDist.index]
+
+    plt.plot(X, hops, color+'o')
+    plt.plot(X, hops, color)
+
+    analyzeFigHopDist.maxy = max(analyzeFigHopDist.maxy, max(hops))
+    analyzeFigHopDist.maxx = max(analyzeFigHopDist.maxx, len(hops))
+    plt.ylim(0, analyzeFigHopDist.maxy+5)
+    plt.xlim(0, analyzeFigHopDist.maxx)
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
+
+    analyzeFigHopDist.legend.append(patches.Patch(color=color, label=methods[analyzeFigHopDist.index]))
+    analyzeFigHopDist.index += 1
+
+analyzeFigHopDist.index = 0
+analyzeFigHopDist.legend = []
+analyzeFigHopDist.maxx = 0
+analyzeFigHopDist.maxy = 0
 
 ################################################################################
 
@@ -123,7 +174,7 @@ def configAction(config: dict, configs: dict):
     # gen not repeated name for each task
     basename = os.path.splitext(confTplFilename)[0]
     joined = "_".join([basename] + list(map(str, config.values())))
-    taskName = re.sub('[/.,*]', '_', joined)
+    taskName = re.sub('[/.,*-]', '_', joined)
 
     # exec template
     logName = taskName + ".log"
@@ -155,13 +206,50 @@ def cleanup():
         spr.run('rm '+file, shell=True)
 
 def run(configs: dict):
-    DFS(globalConfigs)
+    DFS(configs)
     cleanup()
 
 ################################################################################
 # main
 ################################################################################
 
-run(globalConfigs)
-plt.legend(handles=analyzeFigHop.legend)
+currentFig = figs[0]
+run({
+    "seed" : [100],
+    "cycle" : [50],
+    "netsize" : [1000],
+    "kout": [7],
+    "bc_msgnum" : [1],
+    "bc_schedule" : ["0,20"],
+    "qi_total" : [20],
+    "conf_tpl": [
+        "config-plumtree-query.txt",
+        "config-gossip-collect-query.txt"
+    ],
+    "stategy": [
+        "fix-period"
+    ]
+})
+plt.legend(handles=analyzeFigRespHop.legend)
+
+currentFig = figs[1]
+run({
+    "seed" : [100],
+    "cycle" : [50],
+    "netsize" : [1000],
+    "kout": [7],
+    "bc_msgnum" : [1],
+    "bc_schedule" : ["0,20"],
+    "qi_total" : [20],
+    "conf_tpl": [
+        "config-plumtree-query.txt",
+        "config-gossip-collect-query.txt"
+    ],
+    "stategy": [
+        "fix-period"
+    ]
+})
+plt.legend(handles=analyzeFigHopDist.legend)
+
 plt.show()
+# %%

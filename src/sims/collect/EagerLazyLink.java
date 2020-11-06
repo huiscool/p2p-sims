@@ -17,7 +17,7 @@ public class EagerLazyLink implements Protocol, Linkable {
 // parameters
 /*============================================================================*/
 
-    private static int DEFAULT_EAGER_CAPACITY = 8;
+    private static int DEFAULT_EAGER_CAPACITY = 3;
 
     private static int DEFAULT_LAZY_CAPACITY = 2;
 
@@ -97,7 +97,10 @@ public class EagerLazyLink implements Protocol, Linkable {
         if (contains(neighbour)) {
             return false;
         }
-        //先都加到eager中，自适应到lazy中
+        if (degree() + 1 > eagerCap + lazyCap) {
+            // excceed peers
+            return true;
+        }
         eagerPeers.add(neighbour);
         return true;
     }

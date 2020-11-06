@@ -19,7 +19,7 @@ protocol.plumtree.grafttimeout 2
 # topology settings
 init.rnd WireKOut
 init.rnd.protocol lnk
-init.rnd.k 5
+init.rnd.k 7
 
 # broadcast controller
 control.bc sims.collect.BroadcastController

@@ -144,12 +144,14 @@ public void handleRecvRequest(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Request);
     QueryStat qs = queryStats.get(msg.id);
     qs.totalRecvRequest++;
-
-    qs.covered.add(to);
-
-    int cnt = qs.reqHopCounter.getOrDefault(msg.hop, 0);
-    qs.reqHopCounter.put(msg.hop, cnt+1);
     qs.requestHops.add(msg.hop);
+
+    if (! qs.covered.contains(to) ) {
+        int cnt = qs.reqHopCounter.getOrDefault(msg.hop, 0);
+        qs.reqHopCounter.put(msg.hop, cnt+1);
+        qs.covered.add(to);
+    }
+
 }
 
 public void handleRecvResponse(Message msg, Node from, Node to) {

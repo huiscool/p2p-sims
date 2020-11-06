@@ -90,7 +90,7 @@ def analyzeLastLog(jsonLog: dict, config: dict, configs: dict):
 
 def analyzeFigRespHop(jsonLog: dict, config: dict, configs: dict):
     plt.figure(1)
-    hops = jsonLog["queryStats"][1]["stat"]["arriveHops"]
+    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
 
     X = numpy.arange(1, 1+len(hops))
     color = colors[analyzeFigRespHop.index]
@@ -109,7 +109,7 @@ def analyzeFigRespHop(jsonLog: dict, config: dict, configs: dict):
     plt.ylim(0, analyzeFigRespHop.maxy+5)
     plt.xlim(0, 1+len(hops))
     ax = plt.gca()
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_major_locator(plt.MultipleLocator(10))
     ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
     
     analyzeFigRespHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigRespHop.index]))
@@ -121,7 +121,7 @@ analyzeFigRespHop.maxy = 0
 
 def analyzeFigHopDist(jsonLog: dict, config: dict, configs: dict):
     plt.figure(2)
-    hops = jsonLog["queryStats"][1]["stat"]["reqHopCounter"]
+    hops = jsonLog["queryStats"][-1]["stat"]["reqHopCounter"]
     print(hops)
     X = numpy.arange(0, len(hops))
     color = colors[analyzeFigHopDist.index]
@@ -215,18 +215,18 @@ def run(configs: dict):
 
 currentFig = figs[0]
 run({
-    "seed" : [100],
-    "cycle" : [50],
+    "seed" : [99],
+    "cycle" : [80],
     "netsize" : [1000],
-    "kout": [7],
+    "kout": [5],
     "bc_msgnum" : [1],
-    "bc_schedule" : ["0,20"],
+    "bc_schedule" : ["0,20,40"],
     "qi_total" : [20],
     "conf_tpl": [
         "config-plumtree-query.txt",
         "config-gossip-collect-query.txt"
     ],
-    "stategy": [
+    "strategy": [
         "fix-period"
     ]
 })
@@ -234,19 +234,19 @@ plt.legend(handles=analyzeFigRespHop.legend)
 
 currentFig = figs[1]
 run({
-    "seed" : [100],
-    "cycle" : [50],
+    "seed" : [99],
+    "cycle" : [80],
     "netsize" : [1000],
-    "kout": [7],
+    "kout": [5],
     "bc_msgnum" : [1],
-    "bc_schedule" : ["0,20"],
+    "bc_schedule" : ["0,20,40"],
     "qi_total" : [20],
     "conf_tpl": [
         "config-plumtree-query.txt",
         "config-gossip-collect-query.txt"
     ],
-    "stategy": [
-        "fix-period"
+    "strategy": [
+        "random-period"
     ]
 })
 plt.legend(handles=analyzeFigHopDist.legend)

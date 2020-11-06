@@ -2,6 +2,7 @@
 
 #%% 
 import matplotlib.pyplot as plt;
+import matplotlib.patches as patches;
 import numpy;
 import string;
 import os;
@@ -16,19 +17,23 @@ import json;
 
 plt.rcParams['font.sans-serif'] = 'Songti SC'
 
-configTemplateFilenames = [
-    "config-gossip-collect-query.txt",
-    "config-plumtree-query.txt"
+methods = [
+    "plumtree",
+    "dynamic tree"
 ]
 
-configs = {
+globalConfigs = {
     "seed" : [1],
-    "cycle" : [50],
-    "netsize" : [10],
+    "cycle" : [60],
+    "netsize" : [10000],
     "kout": [5],
     "bc_msgnum" : [1],
     "bc_schedule" : ["0,20"],
     "qi_total" : [20],
+    "conf_tpl": [
+        "config-plumtree-query.txt",
+        "config-gossip-collect-query.txt"
+    ],
     # "qo_logpath": dynamic log path
 }
 
@@ -40,46 +45,59 @@ configs = {
 
 cleanupList = []
 
-# fig.1 the response hops with different network size and different degree
+currentFig = 'figHop'
+colors = 'bgrcmyk'
+
+# fig.1 the response hops
+figHop = plt.figure(1)
+plt.title("回复跳数变化趋势")
+plt.xlabel("获取到的回复数")
+plt.ylabel("跳数")
 
 ################################################################################
 # analysis
 ################################################################################
 
 # log analysis
-def analyzeLog(path: str, config: dict):
+def analyzeLog(path: str, config: dict, configs: dict):
     f = open(path)
     logs = []
     for jsonStr in f:
         if jsonStr == "":
             continue
-        logs.append(json.load(jsonStr))
+        logs.append(json.loads(jsonStr))
 
-    analyzeLastLog(logs[-1])
+    analyzeLastLog(logs[-1], config, configs)
 
-def analyzeLastLog(jsonLog: dict, config: dict):
-    # jsonLog["queryStats"][1]["stat"][]
-    pass
-# static
+def analyzeLastLog(jsonLog: dict, config: dict, configs: dict):
+    if currentFig == 'figHop':
+        analyzeFigHop(jsonLog, config, configs)
 
-def printFinalHops(hops: list):
-    fig = plt.figure()
-    plt.title("回复跳数变化趋势")
-    plt.xlabel("获取到的回复数")
-    plt.ylabel("跳数")
+def analyzeFigHop(jsonLog: dict, config: dict, configs: dict):
+    plt.figure(1)
+    lastLog = jsonLog["queryStats"][1]
+    hops = lastLog["stat"]["arriveHops"]
     X = numpy.arange(1, 1+len(hops))
-    plt.plot(X, hops, 'ro')
-    plt.plot(X, hops, 'r')
-    plt.ylim(0, max(hops)+1)
-    plt.show()
+    color = colors[analyzeFigHop.index]
 
+    plt.plot(X, hops, color+'o')
+    plt.plot(X, hops, color)
+    plt.ylim(0, max(hops)+5)
+    plt.xlim(0, 1+len(hops))
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
+    
+    analyzeFigHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigHop.index]))
+    analyzeFigHop.index += 1
 
-
+analyzeFigHop.index = 0
+analyzeFigHop.legend = []
 
 ################################################################################
 
 # iterate different combinations by DFS
-def DFS(confTplFilename: str, action: Callable):
+def DFS(configs: dict):
     items = list(configs.items())
     l = len(items)
     indexs= [0]*l
@@ -88,10 +106,9 @@ def DFS(confTplFilename: str, action: Callable):
         top = l
         # do something with config and peersimConfig
         config = {}
-        print(items)
         for i, (k, v) in enumerate(items):
             config[k] = v[indexs[i]]
-        action(confTplFilename, config)
+        configAction(config, configs)
 
         # iterate the tree
         indexs[top-1] += 1
@@ -101,7 +118,8 @@ def DFS(confTplFilename: str, action: Callable):
             if top > 0:
                 indexs[top-1] += 1
 
-def configAction(confTplFilename: str, config: dict):
+def configAction(config: dict, configs: dict):
+    confTplFilename = config["conf_tpl"]
     # gen not repeated name for each task
     basename = os.path.splitext(confTplFilename)[0]
     joined = "_".join([basename] + list(map(str, config.values())))
@@ -123,10 +141,10 @@ def configAction(confTplFilename: str, config: dict):
     spr.run('rm -rf classes', shell=True)
     spr.run('mkdir -p classes', shell=True)
     spr.run('javac -sourcepath src -classpath `find -L lib/ -name "*.jar" | tr [:space:] :` -d classes `find -L . -name "*.java"`', shell=True)
-    spr.run('java -cp `find -L lib/ -name "*.jar" | tr [:space:] :`:classes peersim.Simulator '+configName, shell=True)
+    spr.run('java -cp `find -L lib/ -name "*.jar" | tr [:space:] :`:classes peersim.Simulator '+configName, shell=True, stdout=spr.DEVNULL)
 
     # analyze the log
-    analyzeLog(path=logName, config=config)
+    analyzeLog(path=logName, config=config, configs=configs)
 
     # choring
     cleanupList.append(logName)
@@ -136,12 +154,14 @@ def cleanup():
     for file in cleanupList:
         spr.run('rm '+file, shell=True)
 
+def run(configs: dict):
+    DFS(globalConfigs)
+    cleanup()
 
 ################################################################################
 # main
 ################################################################################
-# run all!
-for confTplFilename in configTemplateFilenames:
-    DFS(confTplFilename, configAction)
 
-cleanup()
+run(globalConfigs)
+plt.legend(handles=analyzeFigHop.legend)
+plt.show()

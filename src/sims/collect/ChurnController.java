@@ -55,8 +55,7 @@ public boolean execute() {
          CommonState.getTime() != this.schedule.get(scheduleIndex) ) {
         return false;
     }
-    scheduleIndex++;
-
+    
     int n = Network.size();
     for(int i=0; i<n; i++) {
         Network.get(i).setFailState(Fallible.OK);
@@ -71,6 +70,8 @@ public boolean execute() {
     }
 
     System.out.println("induced churn in network: "+k+" node are down");
+
+    scheduleIndex++;
     return false;
 }
 

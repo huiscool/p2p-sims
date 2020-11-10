@@ -31,7 +31,7 @@ control.bc.strategy fix-period
 
 # churn controller
 control.churn sims.collect.ChurnController
-control.churn.begintime 30
+control.churn.schedule 10
 control.churn.percentage 10.0
 
 # observers

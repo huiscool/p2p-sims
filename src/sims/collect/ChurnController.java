@@ -2,6 +2,7 @@ package sims.collect;
 
 import peersim.config.Configuration;
 import peersim.core.*;
+import java.util.*;
 
 /**
  * ChurnController induces a churn in the overlay network by making node failures.
@@ -11,25 +12,37 @@ public class ChurnController implements Control {
 // parameters
 /*============================================================================*/
 
-private static final String PARAM_BEGIN_TIME = "begintime"; // in which turn begin to fail
+private static final String PARAM_SCHEDULE = "schedule"; // in which turn begin to fail
 private static final String PARAM_PERCENTAGE = "percentage"; // failure percentage
 
 /*============================================================================*/
 // fields
 /*============================================================================*/
 
-private int beginTime;
-private double percentage;
+private ArrayList<Integer> schedule;
+private ArrayList<Float> percentage;
+private int scheduleIndex;
+
 
 /*============================================================================*/
 // initializer
 /*============================================================================*/
 
 public ChurnController(String prefix) {
-    beginTime = Configuration.getInt(prefix + "." + PARAM_BEGIN_TIME);
-    percentage = Configuration.getDouble(prefix + "." + PARAM_PERCENTAGE);
-    percentage = percentage <= 0.0 ? 0.0 : percentage;
-    percentage = percentage >= 100.0 ? 100.0 : percentage;
+    String scheduleStr = Configuration.getString(prefix + "." + PARAM_SCHEDULE);
+    String percentageStr = Configuration.getString(prefix + "." + PARAM_PERCENTAGE);
+
+    this.schedule = new ArrayList<>();
+    for(String s : scheduleStr.split("\s*,\s*") ) {
+        schedule.add(Integer.parseInt(s));
+    }
+
+    this.percentage = new ArrayList<>();
+    for(String s : percentageStr.split("\s*,\s*") ) {
+        percentage.add(Float.parseFloat(s));
+    }
+
+    scheduleIndex = 0;
 }
 
 /*============================================================================*/
@@ -38,16 +51,26 @@ public ChurnController(String prefix) {
 
 @Override
 public boolean execute() {
-    if (CommonState.getTime() != beginTime) {
+    if ( scheduleIndex >= schedule.size() || 
+         CommonState.getTime() != this.schedule.get(scheduleIndex) ) {
         return false;
     }
+    scheduleIndex++;
+
     int n = Network.size();
-    int k = (int)Math.round(percentage*n/100.0);
-    int[] nodeindexs = Util.pickup(k, n);
-    for(int i=0; i<nodeindexs.length; i++) {
-        Network.get(nodeindexs[i]).setFailState(Fallible.DEAD);
+    for(int i=0; i<n; i++) {
+        Network.get(i).setFailState(Fallible.OK);
     }
-    System.out.println("induced churn in network: "+k+" node are killed");
+
+    int k = (int)Math.round(percentage.get(scheduleIndex)*n/100.0);
+
+    int[] nodeindexs = Util.pickup(k, n);
+
+    for(int i=0; i<nodeindexs.length; i++) {
+        Network.get(nodeindexs[i]).setFailState(Fallible.DOWN);
+    }
+
+    System.out.println("induced churn in network: "+k+" node are down");
     return false;
 }
 

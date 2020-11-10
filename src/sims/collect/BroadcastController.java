@@ -49,7 +49,6 @@ public BroadcastController(String prefix) {
 
     this.scheduleIndex = 0;
     this.counter = 0;
-    this.fixedNodeIndices = Util.pickup(msgNum, Network.size());
 }
 
 
@@ -71,8 +70,16 @@ private boolean randomPeriod() {
     if (!scheduleOK()) {
         return false;
     }
+
+    ArrayList<Integer> alive = new ArrayList<>();
+    for(int i=0; i<Network.size(); i++) {
+        if (Network.get(i).isUp()) {
+            alive.add(i);
+        }
+    }
+
     // pickup some nodes and deliver messages to their mailbox
-    int[] nodeIndices = Util.pickup(this.msgNum, Network.size());
+    int[] nodeIndices = Util.pickup(this.msgNum, alive.size());
     for(int i=0; i<nodeIndices.length; i++) {
 
         Node node = Network.get(nodeIndices[i]);
@@ -99,6 +106,17 @@ private boolean fixPeriod() {
     if (!scheduleOK()) {
         return false;
     }
+
+    if (fixedNodeIndices == null) {
+        ArrayList<Integer> alive = new ArrayList<>();
+        for(int i=0; i<Network.size(); i++) {
+            if (Network.get(i).isUp()) {
+                alive.add(i);
+            }
+        }
+        this.fixedNodeIndices = Util.pickup(msgNum, alive.size());
+    }
+
     // pickup some nodes and deliver messages to their mailbox
     for(int i=0; i<this.fixedNodeIndices.length; i++) {
 

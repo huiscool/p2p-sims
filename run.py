@@ -17,24 +17,6 @@ import json;
 
 plt.rcParams['font.sans-serif'] = 'Songti SC'
 
-globalConfigs = {
-    "seed" : [100],
-    "cycle" : [60],
-    "netsize" : [1000],
-    "kout": [7],
-    "bc_msgnum" : [1],
-    "bc_schedule" : ["0,20"],
-    "qi_total" : [20],
-    "conf_tpl": [
-        "config-plumtree-query.txt",
-        "config-gossip-collect-query.txt"
-    ],
-    "strategy": [
-        "fix-period",
-        "random-period"
-    ]
-}
-
 cleanupSet = set()
 
 ################################################################################
@@ -149,36 +131,39 @@ analyzeFigRespHop.maxy = 0
 
 ################################################################################
 
-plt.figure(1)
-plt.title("回复跳数变化趋势")
-plt.xlabel("获取到的回复编号")
-plt.ylabel("跳数")
+def runFig1():
+    plt.figure(1)
+    plt.title("回复跳数变化趋势")
+    plt.xlabel("获取到的回复编号")
+    plt.ylabel("跳数")
 
-params = run({
-    "seed" : [99],
-    "cycle" : [80],
-    "netsize" : [1000],
-    "kout": [5],
-    "bc_msgnum" : [1],
-    "bc_schedule" : ["0,20,40"],
-    "qi_total" : [20],
-    "conf_tpl": [
-        "config-plumtree-query.txt",
-        "config-gossip-collect-query.txt"
-    ],
-    "strategy": [
-        "fix-period"
-    ]
-})
+    params = run({
+        "seed" : [99],
+        "cycle" : [70],
+        "netsize" : [10000],
+        "kout": [5],
+        "bc_msgnum" : [1],
+        "bc_schedule" : ["0,20,40"],
+        "churn_schedule": ["-1"],
+        "churn_percentage": ["0"],
+        "qi_total" : [20],
+        "conf_tpl": [
+            "config-plumtree-query.txt",
+            "config-gossip-collect-query.txt"
+        ],
+        "strategy": [
+            "fix-period"
+        ]
+    })
 
-for i,param in enumerate(params):
-    f = open(param["logpath"])
-    last = None
-    for jsonStr in f:
-        if jsonStr == "":
-            continue
-        last = json.loads(jsonStr)
-    analyzeFigRespHop(last, i)
+    for i,param in enumerate(params):
+        f = open(param["logpath"])
+        last = None
+        for jsonStr in f:
+            if jsonStr == "":
+                continue
+            last = json.loads(jsonStr)
+        analyzeFigRespHop(last, i)
     
 
 ################################################################################
@@ -190,7 +175,7 @@ def analyzeFigHopDist(jsonLog: dict, index: int):
     X = numpy.arange(0, len(hops))
 
     color = analyzeFigHopDist.colors[index]
-    plt.legend(handles=analyzeFigRespHop.legend)
+    plt.legend(handles=analyzeFigHopDist.legend)
     plt.plot(X, hops, color+'o')
     plt.plot(X, hops, color)
 
@@ -216,38 +201,118 @@ analyzeFigHopDist.maxy = 0
 
 ################################################################################
 
-figHopDist = plt.figure(2)
-plt.title("请求跳数分布")
-plt.xlabel("跳数")
-plt.ylabel("节点数")
+def runFig2():
+    plt.figure(2)
+    plt.title("请求跳数分布")
+    plt.xlabel("跳数")
+    plt.ylabel("节点数")
 
-params = run({
-    "seed" : [99],
-    "cycle" : [80],
-    "netsize" : [1000],
-    "kout": [5],
-    "bc_msgnum" : [1],
-    "bc_schedule" : ["0,20,40"],
-    "qi_total" : [20],
-    "conf_tpl": [
-        "config-plumtree-query.txt",
-        "config-gossip-collect-query.txt"
-    ],
-    "strategy": [
-        "random-period"
-    ]
-})
+    params = run({
+        "seed" : [99],
+        "cycle" : [70],
+        "netsize" : [10000],
+        "kout": [5],
+        "bc_msgnum" : [1],
+        "bc_schedule" : ["0,20,40"],
+        "churn_schedule": ["-1"],
+        "churn_percentage": ["0"],
+        "qi_total" : [20],
+        "conf_tpl": [
+            "config-plumtree-query.txt",
+            "config-gossip-collect-query.txt"
+        ],
+        "strategy": [
+            "random-period"
+        ]
+    })
 
-for i,param in enumerate(params):
-    f = open(param["logpath"])
-    last = None
-    for jsonStr in f:
-        if jsonStr == "":
-            continue
-        last = json.loads(jsonStr)
-    analyzeFigHopDist(last, i)
+    for i,param in enumerate(params):
+        f = open(param["logpath"])
+        last = None
+        for jsonStr in f:
+            if jsonStr == "":
+                continue
+            last = json.loads(jsonStr)
+        analyzeFigHopDist(last, i)
 
 ################################################################################
+
+def analyzeChurn(jsonLog: dict, index: int):
+    plt.figure(3)
+    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
+
+    if not hops:
+        print("no response for index "+str(index))
+        return
+
+    X = numpy.arange(0, len(hops))
+
+    color = analyzeChurn.colors[index]
+    plt.legend(handles=analyzeChurn.legend)
+    plt.plot(X, hops, color+'o')
+    plt.plot(X, hops, color)
+
+    analyzeChurn.maxy = max(analyzeChurn.maxy, max(hops))
+    analyzeChurn.maxx = max(analyzeChurn.maxx, len(hops))
+    plt.ylim(0, analyzeChurn.maxy+5)
+    plt.xlim(1, analyzeChurn.maxx+1)
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
+    return
+
+# statics
+analyzeChurn.colors = [
+    'r', 'b', 'g', 'y'
+]
+analyzeChurn.legend = [
+    patches.Patch(color='r', label="0%"),
+    patches.Patch(color='b', label="10%"),
+    patches.Patch(color='g', label="20%"),
+    patches.Patch(color='y', label="30%")
+]
+analyzeChurn.maxx = 0
+analyzeChurn.maxy = 0
+
+################################################################################
+
+def runFig3():
+    plt.figure(3)
+    plt.title("不同故障率下的回复跳数分布")
+    plt.xlabel("回复编号")
+    plt.ylabel("跳数")
+
+    params = run({
+        "seed" : [94],
+        "cycle" : [50],
+        "netsize" : [10000],
+        "kout": [5],
+        "bc_msgnum" : [1],
+        "bc_schedule" : ["5"],
+        "churn_schedule": ["4"],
+        "churn_percentage": ["0", "10", "20", "30"],
+        "qi_total" : [100],
+        "conf_tpl": [
+            "config-gossip-collect-query.txt"
+        ],
+        "strategy": [
+            "random-period"
+        ]
+    })
+
+    for i,param in enumerate(params):
+        f = open(param["logpath"])
+        last = None
+        for jsonStr in f:
+            if jsonStr == "":
+                continue
+            last = json.loads(jsonStr)
+        analyzeChurn(last, i)
+
+################################################################################
+
+for task in [runFig3]:
+    task()
 
 plt.show()
 cleanup()

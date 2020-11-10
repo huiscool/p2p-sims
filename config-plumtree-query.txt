@@ -31,8 +31,8 @@ control.bc.strategy ${strategy}
 
 # churn controller
 control.churn sims.collect.ChurnController
-control.churn.schedule 10
-control.churn.percentage 10.0
+control.churn.schedule ${churn_schedule}
+control.churn.percentage ${churn_percentage}
 
 # query initializer
 init.qi sims.collect.QueryInitializer

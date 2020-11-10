@@ -68,9 +68,7 @@ def configAction(config: dict, configs: dict) ->dict:
     conf.close()
     
     # exec task with current config
-    spr.run('rm -rf classes', shell=True)
-    spr.run('mkdir -p classes', shell=True)
-    spr.run('javac -sourcepath src -classpath `find -L lib/ -name "*.jar" | tr [:space:] :` -d classes `find -L . -name "*.java"`', shell=True)
+    
     spr.run('java -cp `find -L lib/ -name "*.jar" | tr [:space:] :`:classes peersim.Simulator '+configName, shell=True, stdout=spr.DEVNULL)
 
     # choring
@@ -83,6 +81,11 @@ def configAction(config: dict, configs: dict) ->dict:
         "config": config,
         "configs": configs,
     }
+
+def compile():
+    spr.run('rm -rf classes', shell=True)
+    spr.run('mkdir -p classes', shell=True)
+    spr.run('javac -sourcepath src -classpath `find -L lib/ -name "*.jar" | tr [:space:] :` -d classes `find -L . -name "*.java"`', shell=True)
 
 def cleanup():
     for file in cleanupSet:
@@ -291,7 +294,7 @@ def runFig3():
         "bc_schedule" : ["5"],
         "churn_schedule": ["4"],
         "churn_percentage": ["0", "10", "20", "30"],
-        "qi_total" : [100],
+        "qi_total" : [40],
         "conf_tpl": [
             "config-gossip-collect-query.txt"
         ],
@@ -310,6 +313,8 @@ def runFig3():
         analyzeChurn(last, i)
 
 ################################################################################
+
+compile()
 
 for task in [runFig3]:
     task()

@@ -17,11 +17,6 @@ import json;
 
 plt.rcParams['font.sans-serif'] = 'Songti SC'
 
-methods = [
-    "plumtree",
-    "dynamic tree"
-]
-
 globalConfigs = {
     "seed" : [100],
     "cycle" : [60],
@@ -40,126 +35,27 @@ globalConfigs = {
     ]
 }
 
-figs = [
-    'figRespHop',
-    'figHopDist'
-]
-colors = 'bgrcmyk'
+cleanupSet = set()
 
 ################################################################################
-# global
-################################################################################
-
-cleanupList = []
-
-currentFig = figs[0]
-
-# fig.1 the response hops
-figRespHop = plt.figure(1)
-plt.title("回复跳数变化趋势")
-plt.xlabel("获取到的回复编号")
-plt.ylabel("跳数")
-
-figHopDist = plt.figure(2)
-plt.title("请求跳数分布")
-plt.xlabel("跳数")
-plt.ylabel("节点数")
-
-################################################################################
-# analysis
-################################################################################
-
-# log analysis
-def analyzeLog(path: str, config: dict, configs: dict):
-    f = open(path)
-    logs = []
-    for jsonStr in f:
-        if jsonStr == "":
-            continue
-        logs.append(json.loads(jsonStr))
-
-    analyzeLastLog(logs[-1], config, configs)
-
-def analyzeLastLog(jsonLog: dict, config: dict, configs: dict):
-    if currentFig == 'figRespHop':
-        analyzeFigRespHop(jsonLog, config, configs)
-        return
-    if currentFig == 'figHopDist':
-        analyzeFigHopDist(jsonLog, config, configs)
-        return
-
-def analyzeFigRespHop(jsonLog: dict, config: dict, configs: dict):
-    plt.figure(1)
-    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
-
-    X = numpy.arange(1, 1+len(hops))
-    color = colors[analyzeFigRespHop.index]
-
-    plt.plot(X, hops, color+'o')
-    plt.plot(X, hops, color)
-
-    if not hops:
-        analyzeFigRespHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigRespHop.index]))
-        analyzeFigRespHop.index += 1
-        print("no response")
-        return
-
-
-    analyzeFigRespHop.maxy = max(analyzeFigRespHop.maxy, max(hops))
-    plt.ylim(0, analyzeFigRespHop.maxy+5)
-    plt.xlim(0, 1+len(hops))
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(plt.MultipleLocator(10))
-    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
-    
-    analyzeFigRespHop.legend.append(patches.Patch(color=color, label=methods[analyzeFigRespHop.index]))
-    analyzeFigRespHop.index += 1
-
-analyzeFigRespHop.index = 0
-analyzeFigRespHop.legend = []
-analyzeFigRespHop.maxy = 0
-
-def analyzeFigHopDist(jsonLog: dict, config: dict, configs: dict):
-    plt.figure(2)
-    hops = jsonLog["queryStats"][-1]["stat"]["reqHopCounter"]
-    print(hops)
-    X = numpy.arange(0, len(hops))
-    color = colors[analyzeFigHopDist.index]
-
-    plt.plot(X, hops, color+'o')
-    plt.plot(X, hops, color)
-
-    analyzeFigHopDist.maxy = max(analyzeFigHopDist.maxy, max(hops))
-    analyzeFigHopDist.maxx = max(analyzeFigHopDist.maxx, len(hops))
-    plt.ylim(0, analyzeFigHopDist.maxy+5)
-    plt.xlim(0, analyzeFigHopDist.maxx)
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
-
-    analyzeFigHopDist.legend.append(patches.Patch(color=color, label=methods[analyzeFigHopDist.index]))
-    analyzeFigHopDist.index += 1
-
-analyzeFigHopDist.index = 0
-analyzeFigHopDist.legend = []
-analyzeFigHopDist.maxx = 0
-analyzeFigHopDist.maxy = 0
-
+# run tasks
 ################################################################################
 
 # iterate different combinations by DFS
-def DFS(configs: dict):
+def DFS(configs: dict) ->list:
     items = list(configs.items())
     l = len(items)
     indexs= [0]*l
     top = l
+    params = []
     while top > 0:
         top = l
         # do something with config and peersimConfig
         config = {}
         for i, (k, v) in enumerate(items):
             config[k] = v[indexs[i]]
-        configAction(config, configs)
+        param = configAction(config, configs)
+        params.append(param)
 
         # iterate the tree
         indexs[top-1] += 1
@@ -168,8 +64,9 @@ def DFS(configs: dict):
             top -= 1
             if top > 0:
                 indexs[top-1] += 1
+    return params
 
-def configAction(config: dict, configs: dict):
+def configAction(config: dict, configs: dict) ->dict:
     confTplFilename = config["conf_tpl"]
     # gen not repeated name for each task
     basename = os.path.splitext(confTplFilename)[0]
@@ -194,27 +91,70 @@ def configAction(config: dict, configs: dict):
     spr.run('javac -sourcepath src -classpath `find -L lib/ -name "*.jar" | tr [:space:] :` -d classes `find -L . -name "*.java"`', shell=True)
     spr.run('java -cp `find -L lib/ -name "*.jar" | tr [:space:] :`:classes peersim.Simulator '+configName, shell=True, stdout=spr.DEVNULL)
 
-    # analyze the log
-    analyzeLog(path=logName, config=config, configs=configs)
-
     # choring
-    cleanupList.append(logName)
-    cleanupList.append(configName)
+    cleanupSet.add(logName)
+    cleanupSet.add(configName)
+
+    # return the parameters needed for analyzation
+    return {
+        "logpath": logName,
+        "config": config,
+        "configs": configs,
+    }
 
 def cleanup():
-    for file in cleanupList:
+    for file in cleanupSet:
         spr.run('rm '+file, shell=True)
 
-def run(configs: dict):
-    DFS(configs)
-    cleanup()
+def run(configs: dict)->list:
+    return DFS(configs)
+
 
 ################################################################################
-# main
+# drawing
 ################################################################################
 
-currentFig = figs[0]
-run({
+def analyzeFigRespHop(jsonLog: dict, index: int):
+    plt.figure(1)
+    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
+
+    X = numpy.arange(1, 1+len(hops))
+
+    color = analyzeFigRespHop.colors[index]
+    plt.legend(handles=analyzeFigRespHop.legend)
+    plt.plot(X, hops, color+'o')
+    plt.plot(X, hops, color)
+
+    if not hops:
+        print("no response")
+        return
+
+    analyzeFigRespHop.maxy = max(analyzeFigRespHop.maxy, max(hops))
+    plt.ylim(0, analyzeFigRespHop.maxy+5)
+    plt.xlim(0, 1+len(hops))
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(plt.MultipleLocator(10))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
+    return
+
+# statics
+analyzeFigRespHop.colors = [
+    'r', 'b'
+]
+analyzeFigRespHop.legend = [
+    patches.Patch(color='r', label="plumtree"),
+    patches.Patch(color='b', label="dynamic tree")
+]
+analyzeFigRespHop.maxy = 0
+
+################################################################################
+
+plt.figure(1)
+plt.title("回复跳数变化趋势")
+plt.xlabel("获取到的回复编号")
+plt.ylabel("跳数")
+
+params = run({
     "seed" : [99],
     "cycle" : [80],
     "netsize" : [1000],
@@ -230,10 +170,58 @@ run({
         "fix-period"
     ]
 })
-plt.legend(handles=analyzeFigRespHop.legend)
 
-currentFig = figs[1]
-run({
+for i,param in enumerate(params):
+    f = open(param["logpath"])
+    last = None
+    for jsonStr in f:
+        if jsonStr == "":
+            continue
+        last = json.loads(jsonStr)
+    analyzeFigRespHop(last, i)
+    
+
+################################################################################
+
+def analyzeFigHopDist(jsonLog: dict, index: int):
+    plt.figure(2)
+    hops = jsonLog["queryStats"][-1]["stat"]["reqHopCounter"]
+
+    X = numpy.arange(0, len(hops))
+
+    color = analyzeFigHopDist.colors[index]
+    plt.legend(handles=analyzeFigRespHop.legend)
+    plt.plot(X, hops, color+'o')
+    plt.plot(X, hops, color)
+
+    analyzeFigHopDist.maxy = max(analyzeFigHopDist.maxy, max(hops))
+    analyzeFigHopDist.maxx = max(analyzeFigHopDist.maxx, len(hops))
+    plt.ylim(0, analyzeFigHopDist.maxy+5)
+    plt.xlim(0, analyzeFigHopDist.maxx)
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
+    return
+
+# statics
+analyzeFigHopDist.colors = [
+    'r', 'b'
+]
+analyzeFigHopDist.legend = [
+    patches.Patch(color='r', label="plumtree"),
+    patches.Patch(color='b', label="dynamic tree")
+]
+analyzeFigHopDist.maxx = 0
+analyzeFigHopDist.maxy = 0
+
+################################################################################
+
+figHopDist = plt.figure(2)
+plt.title("请求跳数分布")
+plt.xlabel("跳数")
+plt.ylabel("节点数")
+
+params = run({
     "seed" : [99],
     "cycle" : [80],
     "netsize" : [1000],
@@ -249,7 +237,18 @@ run({
         "random-period"
     ]
 })
-plt.legend(handles=analyzeFigHopDist.legend)
+
+for i,param in enumerate(params):
+    f = open(param["logpath"])
+    last = None
+    for jsonStr in f:
+        if jsonStr == "":
+            continue
+        last = json.loads(jsonStr)
+    analyzeFigHopDist(last, i)
+
+################################################################################
 
 plt.show()
+cleanup()
 # %%

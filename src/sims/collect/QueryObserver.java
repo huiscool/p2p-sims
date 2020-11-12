@@ -163,7 +163,7 @@ public void handleRecvResponse(Message msg, Node from, Node to) {
         qs.finalResponseHops.add(msg.hop);
         int t = CommonState.getIntTime();
         for (int i=0; i<msg.collectedHits; i++) {
-            qs.arriveTimes.add(t);
+            qs.arriveTimes.add(t-qs.sendTime);
         }
         for (int i=0; i<msg.collectedHits; i++) {
             qs.arriveHops.add(msg.hop);

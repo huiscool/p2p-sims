@@ -6,7 +6,7 @@ import peersim.cdsim.*;
 import peersim.config.Configuration;
 import peersim.core.*;
 
-public class CollectProtocol implements CDProtocol, HitsConfigurable, Deliverable, RequestHandler {
+public class GossipCollectProtocol implements CDProtocol, HitsConfigurable, Deliverable, RequestHandler {
 
 /*============================================================================*/
 // parameters
@@ -26,7 +26,7 @@ private boolean isHit;
 /*============================================================================*/
 // constructor
 /*============================================================================*/
-public CollectProtocol(String prefix) {
+public GossipCollectProtocol(String prefix) {
     mailbox = new LinkedList<>();
     routerID = Configuration.getPid(prefix + "." + PARAM_ROUTER);
     isHit = false;
@@ -49,7 +49,6 @@ public void nextCycle(Node node, int protocolID) {
     }
 
     CollectRoutable router = (CollectRoutable) node.getProtocol(routerID);
-    router.SetRequestHandler(this);
 
     for(Message msg : mailbox) {
         switch (msg.type) {
@@ -73,8 +72,8 @@ public void handleRequest(Node node, Message msg) {
         QueryObserver.handleHit(msg, node);
 
         CollectRoutable router = (CollectRoutable) node.getProtocol(routerID);
-        Node to = router.GetFather(msg);
-        CollectProtocol pto = (CollectProtocol) Util.GetNodeProtocol(to, CollectProtocol.class);
+        Node to = router.getFather(msg);
+        GossipCollectProtocol pto = (GossipCollectProtocol) Util.GetNodeProtocol(to, GossipCollectProtocol.class);
 
         Message outgoing = (Message) msg.hopFrom(node);
         outgoing.type = MessageType.Response;
@@ -92,7 +91,7 @@ public void SetHit() {
 @Override
 public Object clone() {
     try {
-        CollectProtocol that = (CollectProtocol) super.clone();
+        GossipCollectProtocol that = (GossipCollectProtocol) super.clone();
         that.isHit = this.isHit;
         that.mailbox = new LinkedList<>(this.mailbox);
         return that;
@@ -117,8 +116,8 @@ private void handleResponse(
         return;
     }
 
-    Node to = router.GetFather(msg);
-    CollectProtocol pto = (CollectProtocol) to.getProtocol(protocolID);
+    Node to = router.getFather(msg);
+    GossipCollectProtocol pto = (GossipCollectProtocol) to.getProtocol(protocolID);
 
     Message outgoing = msg.hopFrom(node);
     pto.deliver(outgoing);
@@ -130,8 +129,7 @@ private void handleResponse(
  * CollectRoutable is the interface to generate a broadcast tree
  */
 interface CollectRoutable {
-    Node GetFather(Message msg);
-    void SetRequestHandler(RequestHandler handler);
+    Node getFather(Message msg);
 }
 
 interface RequestHandler {

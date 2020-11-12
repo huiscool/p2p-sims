@@ -33,3 +33,6 @@ plumtree-query:
 
 gossip-collect-query:
 	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-gossip-collect-query.txt
+
+int-collect-query:
+	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-int-collect-query.txt

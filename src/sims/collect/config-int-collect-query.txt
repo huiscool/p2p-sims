@@ -9,14 +9,14 @@ network.size 10000
 protocol.lnk IdleProtocol
 
 # query protocol
-protocol.gossip sims.collect.GossipQueryProtocol
-protocol.gossip.linkable lnk
-protocol.gossip.fanout 5
+protocol.int sims.collect.IntQueryProtocol
+protocol.int.linkable lnk
+protocol.int.fanout 5
 
 
 # collect protocol
-protocol.collect sims.collect.GossipCollectProtocol
-protocol.collect.router gossip
+protocol.collect sims.collect.IntCollectProtocol
+protocol.collect.router int
 
 # topology settings
 init.rnd WireKOut
@@ -25,8 +25,8 @@ init.rnd.k 20
 
 # broadcast controller
 control.bc sims.collect.BroadcastController
-control.bc.protocol gossip
-control.bc.msgtype gossip
+control.bc.protocol int
+control.bc.msgtype int
 control.bc.msgnum 1
 control.bc.schedule 0,20,40,60,80
 control.bc.strategy random-period

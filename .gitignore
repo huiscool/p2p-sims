@@ -3,3 +3,4 @@
 lib
 classes/
 *.log
+config_*

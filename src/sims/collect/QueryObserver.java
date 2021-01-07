@@ -175,6 +175,18 @@ public void handleRecvControl(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Control);
     QueryStat qs = queryStats.get(msg.id);
     qs.totalRecvControl++;
+    if (msg instanceof PlumtreeMessage) {
+        PlumtreeMessage pmsg = (PlumtreeMessage) msg;
+        if (pmsg.isIHave) {
+            qs.totalIhave ++;
+        }
+        if (pmsg.isGraft) {
+            qs.totalGraft ++;
+        }
+        if (pmsg.isPrune) {
+            qs.totalPrune ++;
+        }
+    }
 }
 
 public void handleHit(Message msg, Node node) {
@@ -204,6 +216,10 @@ public IncrementalStats requestHops; // request message hop statistics;
 public IncrementalStats finalResponseHops; // final response message hop statistics;
 
 public HashMap<Integer, Integer> reqHopCounter; // record the node number of specified hops.
+
+public int totalGraft;
+public int totalPrune;
+public int totalIhave;
 
 /*============================================================================*/
 // JSON getter

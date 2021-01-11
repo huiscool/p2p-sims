@@ -25,7 +25,7 @@ cleanupSet = set()
 
 # iterate different combinations by DFS
 # skipFilter skips some config when return true.
-def DFS(configs: dict, skipFilter = (lambda conf: False)) ->list:
+def DFS(configs: dict, filter = (lambda param: True)) ->list:
     items = list(configs.items())
     l = len(items)
     indexs= [0]*l
@@ -38,7 +38,7 @@ def DFS(configs: dict, skipFilter = (lambda conf: False)) ->list:
         for i, (k, v) in enumerate(items):
             config[k] = v[indexs[i]]
         param = configAction(config, configs)
-        if not skipFilter(param):
+        if filter(param):
             params.append(param)
 
         # iterate the tree
@@ -93,257 +93,122 @@ def cleanup():
     for file in cleanupSet:
         spr.run('rm '+file, shell=True)
 
-def run(configs: dict, skipFilter = (lambda conf: False))->list:
-    return DFS(configs, skipFilter)
+def run(configs: dict, filter = (lambda param: True))->list:
+    return DFS(configs, filter)
 
 
 ################################################################################
 # drawing
 ################################################################################
 
-def analyzeFigRespHop(jsonLog: dict, index: int):
+def fig1():
     plt.figure(1)
-    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
-
-    X = numpy.arange(1, 1+len(hops))
-
-    color = analyzeFigRespHop.colors[index]
-    plt.legend(handles=analyzeFigRespHop.legend)
-    plt.plot(X, hops, color+'o')
-    plt.plot(X, hops, color)
-
-    if not hops:
-        print("no response")
-        return
-
-    analyzeFigRespHop.maxy = max(analyzeFigRespHop.maxy, max(hops))
-    plt.ylim(0, analyzeFigRespHop.maxy+5)
-    plt.xlim(0, 1+len(hops))
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(plt.MultipleLocator(10))
-    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
-    return
-
-# statics
-analyzeFigRespHop.colors = [
-    'r', 'b'
-]
-analyzeFigRespHop.legend = [
-    patches.Patch(color='r', label="plumtree"),
-    patches.Patch(color='b', label="dynamic tree")
-]
-analyzeFigRespHop.maxy = 0
-
-################################################################################
-
-def runFig1():
-    plt.figure(1)
-    plt.title("回复跳数变化趋势")
-    plt.xlabel("获取到的回复编号")
-    plt.ylabel("跳数")
-
-    params = run({
-        "seed" : [99],
-        "cycle" : [70],
-        "netsize" : [10000],
-        "kout": [5],
-        "bc_msgnum" : [1],
-        "bc_schedule" : ["0,20,40"],
-        "churn_schedule": ["-1"],
-        "churn_percentage": ["0"],
-        "qi_total" : [20],
-        "conf_tpl": [
-            "config-plumtree-query.txt",
-            "config-gossip-collect-query.txt"
-        ],
-        "strategy": [
-            "fix-period"
-        ]
-    })
-
-    for i,param in enumerate(params):
-        f = open(param["logpath"])
-        last = None
-        for jsonStr in f:
-            if jsonStr == "":
-                continue
-            last = json.loads(jsonStr)
-        analyzeFigRespHop(last, i)
-    
-
-################################################################################
-
-def analyzeFigHopDist(jsonLog: dict, index: int):
-    plt.figure(2)
-    hops = jsonLog["queryStats"][-1]["stat"]["reqHopCounter"]
-
-    X = numpy.arange(0, len(hops))
-
-    color = analyzeFigHopDist.colors[index]
-    plt.legend(handles=analyzeFigHopDist.legend)
-    plt.plot(X, hops, color+'o')
-    plt.plot(X, hops, color)
-
-    analyzeFigHopDist.maxy = max(analyzeFigHopDist.maxy, max(hops))
-    analyzeFigHopDist.maxx = max(analyzeFigHopDist.maxx, len(hops))
-    plt.ylim(0, analyzeFigHopDist.maxy+5)
-    plt.xlim(0, analyzeFigHopDist.maxx)
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
-    return
-
-# statics
-analyzeFigHopDist.colors = [
-    'r', 'b'
-]
-analyzeFigHopDist.legend = [
-    patches.Patch(color='r', label="plumtree"),
-    patches.Patch(color='b', label="dynamic tree")
-]
-analyzeFigHopDist.maxx = 0
-analyzeFigHopDist.maxy = 0
-
-################################################################################
-
-def runFig2():
-    plt.figure(2)
-    plt.title("请求跳数分布")
-    plt.xlabel("跳数")
-    plt.ylabel("节点数")
-
-    params = run({
-        "seed" : [99],
-        "cycle" : [70],
-        "netsize" : [10000],
-        "kout": [5],
-        "bc_msgnum" : [1],
-        "bc_schedule" : ["0,20,40"],
-        "churn_schedule": ["-1"],
-        "churn_percentage": ["0"],
-        "qi_total" : [20],
-        "conf_tpl": [
-            "config-plumtree-query.txt",
-            "config-gossip-collect-query.txt"
-        ],
-        "strategy": [
-            "random-period"
-        ]
-    })
-
-    for i,param in enumerate(params):
-        f = open(param["logpath"])
-        last = None
-        for jsonStr in f:
-            if jsonStr == "":
-                continue
-            last = json.loads(jsonStr)
-        analyzeFigHopDist(last, i)
-
-################################################################################
-
-def analyzeChurn(jsonLog: dict, index: int):
-    plt.figure(3)
-    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
-
-    if not hops:
-        print("no response for index "+str(index))
-        return
-
-    X = numpy.arange(0, len(hops))
-
-    color = analyzeChurn.colors[index]
-    plt.legend(handles=analyzeChurn.legend)
-    plt.hist(hops,bins=10, color=analyzeChurn.colors[index], histtype='step')
-
-    analyzeChurn.maxy = max(analyzeChurn.maxy, max(hops))
-    analyzeChurn.maxx = max(analyzeChurn.maxx, len(hops))
-    plt.ylim(0, analyzeChurn.maxy+5)
-    plt.xlim(1, analyzeChurn.maxx+1)
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%2.0f'))
-    return
-
-# statics
-analyzeChurn.colors = [
-    'r', 'b', 'g', 'y',
-    'r', 'b', 'g', 'y'
-]
-analyzeChurn.legend = [
-    patches.Patch(color='r', label="0%"),
-    patches.Patch(color='b', label="10%"),
-    patches.Patch(color='g', label="20%"),
-    patches.Patch(color='y', label="30%"),
-    patches.Patch(color='r', label="0%"),
-    patches.Patch(color='b', label="10%"),
-    patches.Patch(color='g', label="20%"),
-    patches.Patch(color='y', label="30%")
-]
-analyzeChurn.maxx = 0
-analyzeChurn.maxy = 0
-
-################################################################################
-
-def runFig3():
-    plt.figure(3)
-    plt.title("不同故障率下的回复跳数分布")
-    plt.xlabel("回复跳数")
-    plt.ylabel("频数")
-
-    params = run({
-        "seed" : [94],
-        "cycle" : [50],
-        "netsize" : [10000],
-        "kout": [5],
-        "bc_msgnum" : [1],
-        "bc_schedule" : ["5"],
-        "churn_schedule": ["4"],
-        "churn_percentage": ["0", "10", "20", "30"],
-        "qi_total" : [40],
-        "conf_tpl": [
-            "config-gossip-collect-query.txt",
-            "config-int-collect-query.txt"
-        ],
-        "strategy": [
-            "random-period"
-        ]
-    })
-
-    for i,param in enumerate(params):
-        f = open(param["logpath"])
-        last = None
-        for jsonStr in f:
-            if jsonStr == "":
-                continue
-            last = json.loads(jsonStr)
-        analyzeChurn(last, i)
-
-################################################################################
-
-def analyzeFailure(jsonLog: dict, index: int):
-    plt.figure(4)
-    queryNum, successNum = 0, 0 
-    for msg in jsonLog["queryStats"][1:]: # skip the first broadcast
-        queryNum += 1
-        hops = msg["stat"]["arriveHops"]
-        if not hops:
-            # print("no hops")
-            continue
-        successNum += 1
-    analyzeFailure.successRates.append(successNum/queryNum)
-    
-analyzeFailure.successRates = []
-
-def runFig4():
-    plt.figure(4)
-    plt.title("节点数对回收成功率的影响")
+    plt.title("节点数-命中率关系图")
     plt.xlabel("节点数")
-    plt.ylabel("回收成功率")
+    plt.ylabel("命中率")
+
+def fig2():
+    plt.figure(2)
+    plt.title("节点数-接收消息数关系图")
+    plt.xlabel("节点数")
+    plt.ylabel("接收消息数")
+
+def fig3():
+    plt.figure(3)
+    plt.title("节点数-查询成功率关系图")
+    plt.xlabel("节点数")
+    plt.ylabel("查询成功率")
+
+def fig4():
+    plt.figure(4)
+    plt.title("节点数-平均回复跳数图")
+    plt.xlabel("节点数")
+    plt.ylabel("回复跳数")
+
+def fig5():
+    plt.figure(5)
+    plt.title("节点数-查询效率图")
+    plt.xlabel("节点数")
+    plt.ylabel("查询效率")
+
+################################################################################
+
+def fig6():
+    plt.figure(6)
+    plt.title("故障率-命中率关系图")
+    plt.xlabel("故障率")
+    plt.ylabel("命中率")
+
+def fig7():
+    plt.figure(7)
+    plt.title("故障率-接收消息数关系图")
+    plt.xlabel("故障率")
+    plt.ylabel("接收消息数")
+
+def fig8():
+    plt.figure(8)
+    plt.title("故障率-查询成功率关系图")
+    plt.xlabel("故障率")
+    plt.ylabel("查询成功率")
+
+def fig9():
+    plt.figure(9)
+    plt.title("故障率-平均回复跳数图")
+    plt.xlabel("故障率")
+    plt.ylabel("回复跳数")
+
+def fig10():
+    plt.figure(10)
+    plt.title("故障率-查询效率图")
+    plt.xlabel("故障率")
+    plt.ylabel("查询效率")
+
+################################################################################
+
+def analyze(param, hits, msgs, succs, hops, effs):
+    f = open(param["logpath"])
+    last = None
+    for jsonStr in f:
+        if jsonStr == "":
+            continue
+    last = json.loads(jsonStr)
+    stats = last["queryStats"]
+    # how many requests
+    reqnum = len(stats)
+    # hits
+    dmn = param["config"]["qi_total"] * reqnum
+    mnr = sum([msg["stat"]["hits"] for msg in stats])
+    hit = mnr/dmn
+    hits.append(hit)
+    # msgs
+    dmn = param["config"]["netsize"] * reqnum
+    mnr = sum(
+        [
+        msg["stat"]["totalRecvControl"] + 
+        msg["stat"]["totalRecvRequest"] + 
+        msg["stat"]["totalRecvResponse"] for msg in stats
+        ])
+    msg = mnr/dmn
+    msgs.append(msg)
+    # succs
+    dmn = reqnum
+    mnr = sum([1 if msg["stat"]["arriveHops"] else 0 for msg in stats])
+    succ = mnr/dmn
+    succs.append(succ)
+    # hops
+    dmn = reqnum
+    mnr = sum([numpy.mean(msg["stat"]["arriveHops"]) for msg in stats])
+    hop = mnr/dmn
+    hops.append(hop)
+    # effs
+    effs.append((hit/msg)*(succ/hop))
+    return
+
+def runFig1to5():
     configs = {
-        "seed" : [97],
+        "seed" : [98],
         "cycle" : [600],
-        "netsize" : list(range(20, 1000, 20)),
+        "netsize" : [10,50,100, 500, 1000,5000, 10000],
         "kout": [10],
         "bc_msgnum" : [1],
         "bc_schedule" : ["1," + ",".join(map(str,range(20,500,20))) ],
@@ -351,86 +216,61 @@ def runFig4():
         "churn_percentage": ["0"],
         "qi_total" : [12],
         "conf_tpl": [
-            "config-plumtree-query.txt"
+            "config-gossip-collect-query.txt",
+            "config-int-collect-query.txt"
         ],
         "strategy": [
             "random-period"
         ]
     }
-    params = run(configs)
-
-    for i,param in enumerate(params):
-        f = open(param["logpath"])
-        last = None
-        for jsonStr in f:
-            if jsonStr == "":
-                continue
-            last = json.loads(jsonStr)
-        analyzeFailure(last, i)
 
     netsizes = configs["netsize"]
 
-    plt.plot(netsizes, analyzeFailure.successRates, 'r')
+    baselineParams = run(configs, lambda param: param["config"]["conf_tpl"]=="config-gossip-collect-query.txt")
+    hits = []
+    msgs = []
+    succs = []
+    hops = []
+    effs = []
+    for i,param in enumerate(baselineParams):
+        analyze(param, hits, msgs, succs, hops, effs)
+    
+    fig1()
+    plt.plot(netsizes, hits, color='r')
+    fig2()
+    plt.plot(netsizes, msgs, color='r')
+    fig3()
+    plt.plot(netsizes, succs, color='r')
+    fig4()
+    plt.plot(netsizes, hops, color='r')
+    fig5()
+    plt.plot(netsizes, effs, color='r')
+    
+    intbfsParams = run(configs, lambda param: param["config"]["conf_tpl"]=="config-int-collect-query.txt")
+    hits = []
+    msgs = []
+    succs = []
+    hops = []
+    effs = []
+    for i,param in enumerate(intbfsParams):
+        analyze(param, hits, msgs, succs, hops, effs)
+    
+    fig1()
+    plt.plot(netsizes, hits, color='g')
+    fig2()
+    plt.plot(netsizes, msgs, color='g')
+    fig3()
+    plt.plot(netsizes, succs, color='g')
+    fig4()
+    plt.plot(netsizes, hops, color='g')
+    fig5()
+    plt.plot(netsizes, effs, color='g')
 
 ################################################################################
 
-def analyzeNonroot(jsonLog: dict, index: int):
-    plt.figure(5)
-    hops = jsonLog["queryStats"][-1]["stat"]["arriveHops"]
-
-    if not hops:
-        print("no hops for index "+str(index))
-        return
-    
-    print(index, hops)
-    plt.hist(hops,bins=10, color=analyzeNonroot.colors[index])
-
-analyzeNonroot.colors = [
-    'r', 'b'
-]
-analyzeNonroot.legend = [
-    patches.Patch(color='r', label="根节点广播"),
-    patches.Patch(color='b', label="非根节点广播")
-]
-
-# 比较根节点广播和非根节点广播的差异
-def runFig5():
-    plt.figure(5)
-    plt.title("回复跳数分布图")
-    plt.xlabel("跳数")
-    plt.ylabel("频数")
-    configs = {
-        "seed" : [96],
-        "cycle" : [40],
-        "netsize" : [1000],
-        "kout": [10],
-        "bc_msgnum" : [1],
-        "bc_schedule" : ["1,10"],
-        "churn_schedule": ["-1"],
-        "churn_percentage": ["0"],
-        "qi_total" : [30],
-        "conf_tpl": [
-            "config-plumtree-query.txt"
-        ],
-        "strategy": [
-            "fix-period",
-            "random-period"
-        ]
-    }
-    params = run(configs)
-    for i,param in enumerate(params):
-        f = open(param["logpath"])
-        last = None
-        for jsonStr in f:
-            if jsonStr == "":
-                continue
-            last = json.loads(jsonStr)
-        analyzeNonroot(last, i)
-    
-################################################################################
 compile()
 
-for task in [runFig3]:
+for task in [runFig1to5]:
     task()
 
 plt.show()

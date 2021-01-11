@@ -208,7 +208,8 @@ class NodeQuery implements Comparable<NodeQuery> {
 
     @Override
     public int compareTo(NodeQuery that) {
-        return Integer.valueOf(this.score).compareTo(Integer.valueOf(that.score));
+        // descending
+        return Integer.valueOf(that.score).compareTo(Integer.valueOf(this.score));
     }
 }
 

@@ -25,6 +25,9 @@ cleanupSet = set()
 # run tasks
 ################################################################################
 
+def rand():
+    return random.randint(1, 99999999)
+
 # iterate different combinations by DFS
 # skipFilter skips some config when return true.
 def DFS(configs: dict, filter = (lambda param: True)) ->list:
@@ -54,7 +57,7 @@ def DFS(configs: dict, filter = (lambda param: True)) ->list:
     return params
 
 def genParam(config: dict, configs: dict) ->dict:
-    config["seed"] = random.randint(1, 1000)
+    config["seed"] = rand()
     confTplFilename = config["conf_tpl"]
     # gen not repeated name for each task
     basename = os.path.splitext(confTplFilename)[0]
@@ -102,6 +105,7 @@ def cleanup():
 
 def run(configs: dict, filter = (lambda param: True))->list:
     return DFS(configs, filter)
+
 
 
 ################################################################################
@@ -188,7 +192,19 @@ def fig10():
 
 ################################################################################
 
-def analyze(param, hits, msgs, succs, hops, effs):
+def reshapeAndGetMean(vecs, outputLen):
+    if len(vecs) % outputLen != 0:
+        raise Exception("cannot reshape")
+    return numpy.asarray(vecs).reshape((-1, outputLen)).mean(axis=0)
+
+def getEffs(hits, msgs, succs, hops):
+    assert(len(hits)==len(msgs))
+    assert(len(hits)==len(succs))
+    assert(len(hits)==len(hops))
+    l = len(hits)
+    return [(hits[i]*succs[i])/(msgs[i]*hops[i]) for i in range(l)]
+
+def analyze(param, hits, msgs, succs, hops):
     f = open(param["logname"])
     last = None
     for jsonStr in f:
@@ -223,17 +239,16 @@ def analyze(param, hits, msgs, succs, hops, effs):
     mnr = sum([numpy.mean(msg["stat"]["arriveHops"]) if msg["stat"]["arriveHops"] else 0 for msg in stats])
     hop = mnr/dmn
     hops.append(hop)
-    # effs
-    effs.append((hit/msg)*(succ/hop))
     return
 
 def runFig1to5():
     configs = {
-        "cycle" : [600],
+        "seed": [rand() for i in range(5)],
+        "cycle" : [1000],
         "netsize" : [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000],
         "kout": [10],
         "bc_msgnum" : [1],
-        "bc_schedule" : ["1," + ",".join(map(str,range(10,550,10))) ],
+        "bc_schedule" : ["1," + ",".join(map(str,range(10,950,10))) ],
         "churn_schedule": ["-1"],
         "churn_percentage": ["0"],
         "qi_total" : [12],
@@ -255,8 +270,13 @@ def runFig1to5():
     hops = []
     effs = []
     for i,param in enumerate(baselineParams):
-        analyze(param, hits, msgs, succs, hops, effs)
-    
+        analyze(param, hits, msgs, succs, hops)
+    hits = reshapeAndGetMean(hits, len(netsizes))
+    msgs = reshapeAndGetMean(msgs, len(netsizes))
+    succs = reshapeAndGetMean(succs, len(netsizes))
+    hops = reshapeAndGetMean(hops, len(netsizes))
+    effs = getEffs(hits,msgs, succs, hops)
+
     fig1()
     plt.plot(netsizes, hits, color='r', linestyle="-", marker=".")
     fig2()
@@ -277,6 +297,12 @@ def runFig1to5():
     for i,param in enumerate(intbfsParams):
         analyze(param, hits, msgs, succs, hops, effs)
     
+    hits = reshapeAndGetMean(hits, len(netsizes))
+    msgs = reshapeAndGetMean(msgs, len(netsizes))
+    succs = reshapeAndGetMean(succs, len(netsizes))
+    hops = reshapeAndGetMean(hops, len(netsizes))
+    effs = getEffs(hits,msgs, succs, hops)
+    
     fig1()
     plt.plot(netsizes, hits, color='g', linestyle="-", marker=".")
     fig2()
@@ -292,13 +318,14 @@ def runFig1to5():
 
 def runFig6to10():
     configs = {
-        "cycle" : [600],
+        "seed": [rand() for i in range(5)],
+        "cycle" : [1000],
         "netsize" : [10000],
-        "kout": [20],
+        "kout": [10],
         "bc_msgnum" : [1],
-        "bc_schedule" : [",".join(map(str,range(10,500,10))) ],
+        "bc_schedule" : [",".join(map(str,range(10,950,10))) ],
         "churn_schedule": ["1"],
-        "churn_percentage": ["0", "5", "10", "15", "20", "25", "30"],
+        "churn_percentage": list(map(str, range(0, 55, 5))),
         "qi_total" : [12],
         "conf_tpl": [
             "config-gossip-collect-query.txt",
@@ -318,7 +345,13 @@ def runFig6to10():
     hops = []
     effs = []
     for i,param in enumerate(baselineParams):
-        analyze(param, hits, msgs, succs, hops, effs)
+        analyze(param, hits, msgs, succs, hops)
+    
+    hits = reshapeAndGetMean(hits, len(percentages))
+    msgs = reshapeAndGetMean(msgs, len(percentages))
+    succs = reshapeAndGetMean(succs, len(percentages))
+    hops = reshapeAndGetMean(hops, len(percentages))
+    effs = getEffs(hits,msgs, succs, hops)
     
     fig6()
     plt.plot(percentages, hits, color='r', linestyle="-", marker=".")
@@ -338,8 +371,14 @@ def runFig6to10():
     hops = []
     effs = []
     for i,param in enumerate(intbfsParams):
-        analyze(param, hits, msgs, succs, hops, effs)
-    print(hits, msgs, succs, hops, effs)
+        analyze(param, hits, msgs, succs, hops)
+    
+    hits = reshapeAndGetMean(hits, len(percentages))
+    msgs = reshapeAndGetMean(msgs, len(percentages))
+    succs = reshapeAndGetMean(succs, len(percentages))
+    hops = reshapeAndGetMean(hops, len(percentages))
+    effs = getEffs(hits,msgs, succs, hops)
+
     fig6()
     plt.plot(percentages, hits, color='g', linestyle="-", marker=".")
     fig7()
@@ -353,7 +392,7 @@ def runFig6to10():
 
 compile()
 
-for task in [runFig1to5]:
+for task in [runFig6to10]:
     task()
 
 plt.show()

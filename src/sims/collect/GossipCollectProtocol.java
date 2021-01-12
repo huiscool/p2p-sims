@@ -90,6 +90,11 @@ public void SetHit() {
 }
 
 @Override
+public boolean IsHit() {
+    return isHit;
+}
+
+@Override
 public Object clone() {
     try {
         GossipCollectProtocol that = (GossipCollectProtocol) super.clone();

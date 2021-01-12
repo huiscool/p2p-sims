@@ -384,8 +384,14 @@ private void handleResponse(
 
 }
 
+@Override
 public void SetHit() {
     isHit = true;
+}
+
+@Override
+public boolean IsHit() {
+    return isHit;
 }
 
 }

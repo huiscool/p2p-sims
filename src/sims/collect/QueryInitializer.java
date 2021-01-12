@@ -49,4 +49,5 @@ public boolean execute() {
  */
 interface HitsConfigurable {
     void SetHit();
+    boolean IsHit();
 }

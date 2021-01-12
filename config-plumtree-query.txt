@@ -33,6 +33,7 @@ control.bc.strategy ${strategy}
 control.churn sims.collect.ChurnController
 control.churn.schedule ${churn_schedule}
 control.churn.percentage ${churn_percentage}
+control.churn.protocol plumtree
 
 # query initializer
 init.qi sims.collect.QueryInitializer

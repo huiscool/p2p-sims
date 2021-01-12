@@ -14,6 +14,7 @@ public class ChurnController implements Control {
 
 private static final String PARAM_SCHEDULE = "schedule"; // in which turn begin to fail
 private static final String PARAM_PERCENTAGE = "percentage"; // failure percentage
+private static final String PARAM_PROTOCOL = "protocol";
 
 /*============================================================================*/
 // fields
@@ -22,7 +23,7 @@ private static final String PARAM_PERCENTAGE = "percentage"; // failure percenta
 private ArrayList<Integer> schedule;
 private ArrayList<Float> percentage;
 private int scheduleIndex;
-
+private int protocolID;
 
 /*============================================================================*/
 // initializer
@@ -42,6 +43,8 @@ public ChurnController(String prefix) {
         percentage.add(Float.parseFloat(s));
     }
 
+    this.protocolID = Configuration.getPid(prefix + "." + PARAM_PROTOCOL);
+
     scheduleIndex = 0;
 }
 
@@ -57,13 +60,22 @@ public boolean execute() {
     }
     
     int n = Network.size();
+    ArrayList<Integer> hits = new ArrayList<>();
     for(int i=0; i<n; i++) {
         Network.get(i).setFailState(Fallible.OK);
+        HitsConfigurable h = (HitsConfigurable) Network.get(i).getProtocol(protocolID);
+        if (h.IsHit()) {
+            hits.add(i);
+        }
+    }
+    int[] arr = new int[hits.size()];
+    for (int i = 0; i < arr.length; i++){
+        arr[i] = hits.get (i);
     }
 
     int k = (int)Math.round(percentage.get(scheduleIndex)*n/100.0);
 
-    int[] nodeindexs = Util.pickup(k, n);
+    int[] nodeindexs = Util.pickupWithout(k, n, arr);
 
     for(int i=0; i<nodeindexs.length; i++) {
         Network.get(nodeindexs[i]).setFailState(Fallible.DOWN);

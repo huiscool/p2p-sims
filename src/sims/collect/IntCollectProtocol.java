@@ -138,6 +138,11 @@ public void SetHit() {
 }
 
 @Override
+public boolean IsHit() {
+    return isHit;
+}
+
+@Override
 public Object clone() {
     try {
         IntCollectProtocol that = (IntCollectProtocol) super.clone();

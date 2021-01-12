@@ -5,6 +5,7 @@ import java.util.*;
 import peersim.cdsim.*;
 import peersim.config.Configuration;
 import peersim.core.*;
+import peersim.dynamics.WireKOut;
 
 public class IntCollectProtocol implements CDProtocol, HitsConfigurable, Deliverable, RequestHandler, PeerRecommender {
 
@@ -29,6 +30,7 @@ private boolean isHit;
 // constructor
 /*============================================================================*/
 public IntCollectProtocol(String prefix) {
+
     mailbox = new LinkedList<>();
     querys = new HashMap<>();
     routerID = Configuration.getPid(prefix + "." + PARAM_ROUTER);
@@ -71,7 +73,7 @@ public void nextCycle(Node node, int protocolID) {
 }
 
 @Override
-public void handleRequest(Node node, Message msg) {
+public void handleRequest(Node node, Message msg, Linkable linkable) {
     assert(msg.type == MessageType.Request);
     if (isHit) {
         QueryObserver.handleHit(msg, node);
@@ -85,9 +87,8 @@ public void handleRequest(Node node, Message msg) {
         outgoing.collectedHits = 1;
         pto.deliver(outgoing);
         QueryObserver.handleSendResponse(outgoing, node, to);
-
         // deliver control message to all peers
-        Linkable linkable = (Linkable) Util.GetNodeProtocol(to, Linkable.class);
+        // Linkable linkable = (Linkable) Util.GetNodeProtocol(node, IdleProtocol.class);
         Util.pickupNeighbors(linkable.degree(), linkable).
         forEach(neigh -> {
             if (neigh == to) {

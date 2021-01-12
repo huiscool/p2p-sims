@@ -35,6 +35,7 @@ control.bc.strategy random-period
 control.churn sims.collect.ChurnController
 control.churn.schedule 10
 control.churn.percentage 10.0
+control.churn.protocol collect
 
 # query initializer
 init.qi sims.collect.QueryInitializer

@@ -84,7 +84,7 @@ public void nextCycle(Node node, int protocolID) {
 
         fathers.put(incoming.id, from);
 
-        reqHandler.handleRequest(node, incoming);
+        reqHandler.handleRequest(node, incoming, linkable);
 
         // write an outgoing mail
         Message outgoing = (Message) incoming.hopFrom(node);

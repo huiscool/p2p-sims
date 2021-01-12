@@ -66,7 +66,7 @@ public void nextCycle(Node node, int protocolID) {
 }
 
 @Override
-public void handleRequest(Node node, Message msg) {
+public void handleRequest(Node node, Message msg, Linkable linkable) {
     assert(msg.type == MessageType.Request);
     if (isHit) {
         QueryObserver.handleHit(msg, node);
@@ -140,5 +140,5 @@ interface CollectRoutable {
 }
 
 interface RequestHandler {
-    void handleRequest(Node node, Message msg);
+    void handleRequest(Node node, Message msg, Linkable linkable);
 }

@@ -87,6 +87,9 @@ public static QueryObserverInstance getInstance() {
 }
 
 public boolean execute() {
+    if (CommonState.getEndTime()-1 != CommonState.getTime()) {
+        return false;
+    }
     String json = JSON.toJSONString(getInstance());
     System.out.println(json);
     try {

@@ -59,6 +59,18 @@ public static void handleNewRequest(Message msg, Node node) {
     getInstance().handleNewRequest(msg, node);
 }
 
+public static void handleSendRequest(Message msg, Node from, Node to) {
+    getInstance().handleSendRequest(msg, from, to);
+}
+
+public static void handleSendResponse(Message msg, Node from, Node to) {
+    getInstance().handleSendResponse(msg, from, to);
+}
+
+public static void handleSendControl(Message msg, Node from, Node to) {
+    getInstance().handleSendControl(msg, from, to);
+}
+
 public static void handleRecvRequest(Message msg, Node from, Node to) {
     getInstance().handleRecvRequest(msg, from, to);
 }
@@ -143,6 +155,24 @@ public void handleNewRequest(Message msg, Node node) {
     queryStats.put(msg.id, qs);
 }
 
+public void handleSendRequest(Message msg, Node from, Node to) {
+    assert(msg.type == MessageType.Request);
+    QueryStat qs = queryStats.get(msg.id);
+    qs.totalSendRequest++;
+}
+
+public void handleSendResponse(Message msg, Node from, Node to) {
+    assert(msg.type == MessageType.Response);
+    QueryStat qs = queryStats.get(msg.id);
+    qs.totalSendResponse++;
+}
+
+public void handleSendControl(Message msg, Node from, Node to) {
+    assert(msg.type == MessageType.Control);
+    QueryStat qs = queryStats.get(msg.id);
+    qs.totalSendControl++;
+}
+
 public void handleRecvRequest(Message msg, Node from, Node to) {
     assert(msg.type == MessageType.Request);
     QueryStat qs = queryStats.get(msg.id);
@@ -210,6 +240,9 @@ public HashSet<Node> hits; // how many nodes are hit
 public int totalRecvRequest; // how many received requests around the network
 public int totalRecvResponse; // how many received responses around the network
 public int totalRecvControl; // how many received controls around the network
+public int totalSendRequest; // how many sent requests around the network
+public int totalSendResponse; // how many sent responses around the network
+public int totalSendControl; // how many sent controls around the network
 public ArrayList<Integer> arriveTimes; // record the time when the i-th result arrived at the root node. The size is how many results that the root node received.
 public ArrayList<Integer> arriveHops; // record the i-th result's hop.
 

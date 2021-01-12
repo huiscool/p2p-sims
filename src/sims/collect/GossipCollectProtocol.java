@@ -79,6 +79,7 @@ public void handleRequest(Node node, Message msg) {
         outgoing.type = MessageType.Response;
         outgoing.collectedHits = 1;
         pto.deliver(outgoing);
+        QueryObserver.handleSendResponse(outgoing, node, to);
         // System.out.printf("hit: %d->%d%n", node.getIndex(), to.getIndex());
     }
 }
@@ -121,6 +122,7 @@ private void handleResponse(
 
     Message outgoing = msg.hopFrom(node);
     pto.deliver(outgoing);
+    QueryObserver.handleSendResponse(outgoing, node, to);
 }
 
 }

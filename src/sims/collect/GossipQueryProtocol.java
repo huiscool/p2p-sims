@@ -94,6 +94,7 @@ public void nextCycle(Node node, int protocolID) {
             // deliver to neighs
             GossipQueryProtocol to = (GossipQueryProtocol) neigh.getProtocol(protocolID);
             to.deliver(outgoing);
+            QueryObserver.handleSendRequest(outgoing, node, neigh);
         }
     }
     mailbox.clear();

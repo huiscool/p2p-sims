@@ -84,6 +84,7 @@ public void handleRequest(Node node, Message msg) {
         outgoing.type = MessageType.Response;
         outgoing.collectedHits = 1;
         pto.deliver(outgoing);
+        QueryObserver.handleSendResponse(outgoing, node, to);
 
         // deliver control message to all peers
         Linkable linkable = (Linkable) Util.GetNodeProtocol(to, Linkable.class);
@@ -97,6 +98,7 @@ public void handleRequest(Node node, Message msg) {
             Message ctrl = (Message) msg.hopFrom(node);
             ctrl.type = MessageType.Control;
             pneigh.deliver(ctrl);
+            QueryObserver.handleSendControl(ctrl, node, neigh);
         });
     }
 }
@@ -176,6 +178,7 @@ private void handleResponse(
 
     Message outgoing = msg.hopFrom(node);
     pto.deliver(outgoing);
+    QueryObserver.handleSendResponse(outgoing, node, to);
 }
 
 private void handleControl(

@@ -86,6 +86,7 @@ public void nextCycle(Node node, int protocolID) {
             // deliver to neighs
             IntQueryProtocol to = (IntQueryProtocol) neigh.getProtocol(protocolID);
             to.deliver(outgoing);
+            QueryObserver.handleSendRequest(outgoing, node, neigh);
         }
     }
     mailbox.clear();

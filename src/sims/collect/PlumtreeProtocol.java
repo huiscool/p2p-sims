@@ -176,7 +176,7 @@ private void handleIHave(
     PlumtreeMessage outgoing
 ) {
 
-    if (seen.contains(incoming)) {
+    if (seen.contains(incoming.id)) {
         return;
     }
     // set up timer
@@ -196,7 +196,7 @@ private void handleGraft(
     PlumtreeMessage outgoing
 ) {
     linkable.graft(from);
-    if (seen.contains(incoming)) {
+    if (seen.contains(incoming.id)) {
         // send gossip
         PlumtreeMessage gossipMsg = (PlumtreeMessage) outgoing.clone();
         gossipMsg.isGossip = true;

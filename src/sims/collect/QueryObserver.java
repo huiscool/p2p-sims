@@ -17,10 +17,12 @@ public class QueryObserver implements Control {
 // parameters
 /*============================================================================*/
 private static String PARAM_LOG_PATH = "logpath";
+private static String PARAM_BEGIN = "beginning";
 
 /*============================================================================*/
 // fields
 /*============================================================================*/
+public static int beginning;
 private static QueryObserverInstance instance;
 private String logPath;
 private File logFile;
@@ -30,6 +32,7 @@ private File logFile;
 /*============================================================================*/
 public QueryObserver(String prefix) {
     logPath = Configuration.getString(prefix + "." + PARAM_LOG_PATH, "./query.log");
+    beginning = Configuration.getInt(prefix + "." + PARAM_BEGIN);
 
     logFile = new File(logPath);
     if (! logFile.exists() ) {
@@ -60,34 +63,58 @@ public static void handleNewRequest(Message msg, Node node) {
 }
 
 public static void handleSendRequest(Message msg, Node from, Node to) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleSendRequest(msg, from, to);
 }
 
 public static void handleSendResponse(Message msg, Node from, Node to) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleSendResponse(msg, from, to);
 }
 
 public static void handleSendControl(Message msg, Node from, Node to) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleSendControl(msg, from, to);
 }
 
 public static void handleRecvRequest(Message msg, Node from, Node to) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleRecvRequest(msg, from, to);
 }
 
 public static void handleRecvResponse(Message msg, Node from, Node to) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleRecvResponse(msg, from, to);
 }
 
 public static void handleRecvControl(Message msg, Node from, Node to) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleRecvControl(msg, from, to);
 }
 
 public static void handleHit(Message msg, Node node) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleHit(msg, node);
 }
 
 public static void handleQuerySuccess(Message msg, Node node) {
+    if (CommonState.getIntTime() < beginning ) {
+        return;
+    }
     getInstance().handleQuerySuccess(msg, node);
 }
 
@@ -132,9 +159,13 @@ public HashMap<Integer, QueryStat> queryStats = new HashMap<>();
 public JSONArray getQueryStats() {
     JSONArray out = new JSONArray();
     for (Map.Entry<Integer, QueryStat> entry : queryStats.entrySet()) {
+        QueryStat stat = entry.getValue();
+        if (stat.sendTime < QueryObserver.beginning) {
+            continue;
+        }
         JSONObject o = new JSONObject();
         o.put("msgID", entry.getKey());
-        o.put("stat", entry.getValue());
+        o.put("stat", stat);
         out.add(o);
     }
     return out;

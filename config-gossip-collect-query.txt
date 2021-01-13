@@ -45,3 +45,4 @@ init.qi.total ${qi_total}
 # observers
 control.qo sims.collect.QueryObserver
 control.qo.logpath ${qo_logpath}
+control.qo.beginning ${qo_beginning}

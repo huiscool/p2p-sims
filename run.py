@@ -89,7 +89,7 @@ def genParam(config: dict, configs: dict) ->dict:
     }
 
 def execConfig(configName, logName):
-    spr.run('java -cp `find -L lib/ -name "*.jar" | tr [:space:] :`:classes peersim.Simulator '+configName, shell=True, stdout=spr.DEVNULL)
+    spr.run('java -Xmx8g -cp `find -L lib/ -name "*.jar" | tr [:space:] :`:classes peersim.Simulator '+configName, shell=True, stdout=spr.DEVNULL)
 
     # choring
     cleanupSet.add(logName)
@@ -190,6 +190,41 @@ def fig10():
     plt.ylabel("查询效率")
     legend()
 
+def fig11():
+    plt.figure(11)
+    plt.title("节点出度-命中率关系图")
+    plt.xlabel("节点出度")
+    plt.ylabel("命中率")
+    legend()
+
+def fig12():
+    plt.figure(12)
+    plt.title("节点出度-接收消息数关系图")
+    plt.xlabel("节点出度")
+    plt.ylabel("接收消息数")
+    legend()
+
+def fig13():
+    plt.figure(13)
+    plt.title("节点出度-查询成功率关系图")
+    plt.xlabel("节点出度")
+    plt.ylabel("查询成功率")
+    legend()
+
+def fig14():
+    plt.figure(14)
+    plt.title("节点出度-平均回复跳数图")
+    plt.xlabel("节点出度")
+    plt.ylabel("回复跳数")
+    legend()
+
+def fig15():
+    plt.figure(15)
+    plt.title("节点出度-查询效率关系图")
+    plt.xlabel("节点出度")
+    plt.ylabel("查询效率")
+    legend()
+
 ################################################################################
 
 def reshapeAndGetMean(vecs, outputLen):
@@ -223,9 +258,9 @@ def analyze(param, hits, msgs, succs, hops):
     dmn = param["config"]["netsize"] * reqnum
     mnr = sum(
         [
-        msg["stat"]["totalRecvControl"] + 
-        msg["stat"]["totalRecvRequest"] + 
-        msg["stat"]["totalRecvResponse"] for msg in stats
+        msg["stat"]["totalSendControl"] + 
+        msg["stat"]["totalSendRequest"] + 
+        msg["stat"]["totalSendResponse"] for msg in stats
         ])
     msg = mnr/dmn
     msgs.append(msg)
@@ -244,11 +279,11 @@ def analyze(param, hits, msgs, succs, hops):
 def runFig1to5():
     configs = {
         "seed": [rand() for i in range(5)],
-        "cycle" : [1000],
-        "netsize" : [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000],
+        "cycle" : [1050],
+        "netsize" : [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000],
         "kout": [10],
         "bc_msgnum" : [1],
-        "bc_schedule" : ["1," + ",".join(map(str,range(10,950,10))) ],
+        "bc_schedule" : [",".join(map(str,range(5,1010,5)))],
         "churn_schedule": ["-1"],
         "churn_percentage": ["0"],
         "qi_total" : [12],
@@ -258,7 +293,8 @@ def runFig1to5():
         ],
         "strategy": [
             "random-period"
-        ]
+        ],
+        "qo_beginning": [0]
     }
 
     netsizes = configs["netsize"]
@@ -295,7 +331,7 @@ def runFig1to5():
     hops = []
     effs = []
     for i,param in enumerate(intbfsParams):
-        analyze(param, hits, msgs, succs, hops, effs)
+        analyze(param, hits, msgs, succs, hops)
     
     hits = reshapeAndGetMean(hits, len(netsizes))
     msgs = reshapeAndGetMean(msgs, len(netsizes))
@@ -318,14 +354,14 @@ def runFig1to5():
 
 def runFig6to10():
     configs = {
-        "seed": [rand() for i in range(5)],
-        "cycle" : [1000],
+        "seed": [rand() for i in range(1)],
+        "cycle" : [1050],
         "netsize" : [10000],
         "kout": [10],
         "bc_msgnum" : [1],
-        "bc_schedule" : [",".join(map(str,range(10,950,10))) ],
+        "bc_schedule" : [",".join(map(str,range(5,1000,5)))],
         "churn_schedule": ["1"],
-        "churn_percentage": list(map(str, range(0, 55, 5))),
+        "churn_percentage": list(map(str, range(0, 1, 5))),
         "qi_total" : [12],
         "conf_tpl": [
             "config-gossip-collect-query.txt",
@@ -333,7 +369,8 @@ def runFig6to10():
         ],
         "strategy": [
             "random-period"
-        ]
+        ],
+        "qo_beginning": [0]
     }
 
     percentages = [int(percentage) for percentage in configs["churn_percentage"]]
@@ -390,9 +427,90 @@ def runFig6to10():
     fig10()
     plt.plot(percentages, effs, color='g', linestyle="-", marker=".")
 
+################################################################################
+
+def runFig11to15():
+    configs = {
+        "seed": [rand() for i in range(1)],
+        "cycle" : [1050],
+        "netsize" : [10000],
+        "kout": [5,10,20,50,100,200,500,1000],
+        "bc_msgnum" : [1],
+        "bc_schedule" : [",".join(map(str,range(5,1000,5)))],
+        "churn_schedule": ["-1"],
+        "churn_percentage": ["0"],
+        "qi_total" : [12],
+        "conf_tpl": [
+            "config-gossip-collect-query.txt",
+            "config-int-collect-query.txt"
+        ],
+        "strategy": [
+            "random-period"
+        ],
+        "qo_beginning": [0]
+    }
+
+    degrees = configs["kout"]
+
+    baselineParams = run(configs, lambda param: param["config"]["conf_tpl"]=="config-gossip-collect-query.txt")
+    hits = []
+    msgs = []
+    succs = []
+    hops = []
+    effs = []
+    for i,param in enumerate(baselineParams):
+        analyze(param, hits, msgs, succs, hops)
+    
+    hits = reshapeAndGetMean(hits, len(degrees))
+    msgs = reshapeAndGetMean(msgs, len(degrees))
+    succs = reshapeAndGetMean(succs, len(degrees))
+    hops = reshapeAndGetMean(hops, len(degrees))
+    effs = getEffs(hits,msgs, succs, hops)
+    
+    fig6()
+    plt.plot(degrees, hits, color='r', linestyle="-", marker=".")
+    fig7()
+    plt.plot(degrees, msgs, color='r', linestyle="-", marker=".")
+    fig8()
+    plt.plot(degrees, succs, color='r', linestyle="-", marker=".")
+    fig9()
+    plt.plot(degrees, hops, color='r', linestyle="-", marker=".")
+    fig10()
+    plt.plot(degrees, effs, color='r', linestyle="-", marker=".")
+    
+    intbfsParams = run(configs, lambda param: param["config"]["conf_tpl"]=="config-int-collect-query.txt")
+    hits = []
+    msgs = []
+    succs = []
+    hops = []
+    effs = []
+    for i,param in enumerate(intbfsParams):
+        analyze(param, hits, msgs, succs, hops)
+    
+    hits = reshapeAndGetMean(hits, len(degrees))
+    msgs = reshapeAndGetMean(msgs, len(degrees))
+    succs = reshapeAndGetMean(succs, len(degrees))
+    hops = reshapeAndGetMean(hops, len(degrees))
+    effs = getEffs(hits,msgs, succs, hops)
+
+    fig6()
+    plt.plot(degrees, hits, color='g', linestyle="-", marker=".")
+    fig7()
+    plt.plot(degrees, msgs, color='g', linestyle="-", marker=".")
+    fig8()
+    plt.plot(degrees, succs, color='g', linestyle="-", marker=".")
+    fig9()
+    plt.plot(degrees, hops, color='g', linestyle="-", marker=".")
+    fig10()
+    plt.plot(degrees, effs, color='g', linestyle="-", marker=".")
+
 compile()
 
-for task in [runFig6to10]:
+for task in [
+    # runFig1to5,
+    # runFig6to10,
+    runFig11to15,
+    ]:
     task()
 
 plt.show()

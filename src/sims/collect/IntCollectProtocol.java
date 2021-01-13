@@ -219,6 +219,11 @@ class NodeQuery implements Comparable<NodeQuery> {
         // descending
         return Integer.valueOf(that.score).compareTo(Integer.valueOf(this.score));
     }
+
+    @Override
+    public String toString() {
+        return "{"+node.getIndex()+","+score+"}";
+    }
 }
 
 }

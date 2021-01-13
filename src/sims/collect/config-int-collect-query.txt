@@ -45,3 +45,4 @@ init.qi.total 20
 # observers
 control.qo sims.collect.QueryObserver
 control.qo.logpath ./example.log
+control.qo.beginning 70

@@ -20,7 +20,7 @@ private static String PARAM_ROUTER = "router";
 /*============================================================================*/
 private List<Message> mailbox;
 
-private HashMap<Node, Set<Message>> querys;
+private HashMap<Node, Integer> querys;
 
 private int routerID;
 
@@ -118,7 +118,7 @@ public Set<Node> GetRecommendations(Message msg, int k, Linkable linkable) {
     NodeQuery[] neighs = new NodeQuery[linkable.degree()];
     for(int i=0; i<linkable.degree(); i++) {
         Node neigh = linkable.getNeighbor(i);
-        int score = this.querys.getOrDefault(neigh, new HashSet<>()).size();
+        int score = this.querys.getOrDefault(neigh, 0);
         neighs[i] = new NodeQuery(neigh, score);
     }
     Arrays.sort(neighs);
@@ -149,8 +149,8 @@ public Object clone() {
         IntCollectProtocol that = (IntCollectProtocol) super.clone();
         that.mailbox = new LinkedList<>(this.mailbox);
         that.querys = new HashMap<>();
-        for(Map.Entry<Node, Set<Message>> e : this.querys.entrySet()) {
-            that.querys.put(e.getKey(), new HashSet<>(e.getValue()));
+        for(Map.Entry<Node, Integer> e : this.querys.entrySet()) {
+            that.querys.put(e.getKey(), e.getValue());
         }
         that.isHit = this.isHit;
         return that;
@@ -198,9 +198,8 @@ private void handleControl(
 }
 
 private void addQueryInfo(Message msg) {
-    Set<Message> nodeMsg = querys.getOrDefault(msg.from, new HashSet<Message>());
-    nodeMsg.add(msg);
-    querys.put(msg.from, nodeMsg);
+    int score = querys.getOrDefault(msg.from, 0);
+    querys.put(msg.from, score+1);
 }
 
 /*============================================================================*/

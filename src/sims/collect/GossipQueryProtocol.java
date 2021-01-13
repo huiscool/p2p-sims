@@ -21,7 +21,7 @@ private static final String PARAM_FANOUT = "fanout";
 /*============================================================================*/
 private int fanout; 
 private Deque<Message> mailbox; // the messages in mailbox
-private Set<Message> seen;
+private Set<Integer> seen;
 
 private Map<Integer, Node> fathers;
 private RequestHandler reqHandler;
@@ -77,10 +77,10 @@ public void nextCycle(Node node, int protocolID) {
         Node from = incoming.from;
         QueryObserver.handleRecvRequest(incoming, incoming.from, node);
 
-        if (seen.contains(incoming)) {
+        if (seen.contains(incoming.id)) {
             continue;
         }
-        seen.add(incoming);
+        seen.add(incoming.id);
 
         fathers.put(incoming.id, from);
 

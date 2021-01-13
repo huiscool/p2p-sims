@@ -19,7 +19,7 @@ private int ihaveTimeout;
 private int graftTimeout;
 
 private Deque<Message> mailbox; // stores unchecked messages
-private Set<Message> seen; // stores seen gossips
+private Set<Integer> seen; // stores seen gossips
 private Map<Integer, LinkedList<Node>> missing; // stores received ihave messages
 
 private MessageIDTimer ihaveTimer;
@@ -135,7 +135,7 @@ private void handleGossip(
 
     Node node = outgoing.from;
 
-    if (seen.contains(incoming)) {
+    if (seen.contains(incoming.id)) {
         linkable.prune(from);
         
         // send prune
@@ -151,7 +151,7 @@ private void handleGossip(
         PlumtreeObserver.handleSendMsg(protocolID, node, from, outgoing);
         return;
     }
-    seen.add(incoming);
+    seen.add(incoming.id);
 
     // cancel timer
     ihaveTimer.cancel(incoming.id);

@@ -17,22 +17,22 @@ download:
 	rm $(zipname)
 
 pingpong:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/pingpong/config.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/pingpong/config.txt
 
 broadcasttree:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/broadcasttree/config.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/broadcasttree/config.txt
 
 gossip:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-gossip.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-gossip.txt
 
 plumtree:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree.txt
 
 plumtree-query:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree-query.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-plumtree-query.txt
 
 gossip-collect-query:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-gossip-collect-query.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-gossip-collect-query.txt
 
 int-collect-query:
-	java -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-int-collect-query.txt
+	java -Xmx8g -cp $(LIB_JARS):classes peersim.Simulator src/sims/collect/config-int-collect-query.txt

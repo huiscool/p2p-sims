@@ -179,10 +179,11 @@ public void handleRecvRequest(Message msg, Node from, Node to) {
     qs.totalRecvRequest++;
     qs.requestHops.add(msg.hop);
 
-    if (! qs.covered.contains(to) ) {
+    if (! qs.coveredSet.get(to.getIndex())) {
         int cnt = qs.reqHopCounter.getOrDefault(msg.hop, 0);
         qs.reqHopCounter.put(msg.hop, cnt+1);
-        qs.covered.add(to);
+        qs.covered ++;
+        qs.coveredSet.set(to.getIndex());
     }
 
 }
@@ -235,7 +236,11 @@ public void handleQuerySuccess(Message msg, Node node) {
 class QueryStat {
 public int sendTime;
 public Node root;
-public HashSet<Node> covered; // how many nodes receive requests
+
+public int covered; // how many nodes receive requests
+
+@JSONField(serialize=false)
+public BitSet coveredSet; // how many nodes receive requests
 public HashSet<Node> hits; // how many nodes are hit
 public int totalRecvRequest; // how many received requests around the network
 public int totalRecvResponse; // how many received responses around the network
@@ -264,11 +269,6 @@ public int totalIhave;
 @JSONField(name = "root")
 public int getRoot() {
     return root.getIndex();
-}
-
-@JSONField(name = "covered")
-public int getCovered() {
-    return covered.size();
 }
 
 @JSONField(name = "hits")
@@ -320,7 +320,8 @@ public JSONArray getReqHopCounter() {
 /*============================================================================*/
 
 public QueryStat() {
-    covered = new HashSet<>();
+    covered = 0;
+    coveredSet = new BitSet();
     hits = new HashSet<>();
     requestHops = new IncrementalStats();
     finalResponseHops = new IncrementalStats();

@@ -176,6 +176,17 @@ public int getTime() {
     return CommonState.getIntTime();
 }
 
+@JSONField(name = "alive")
+public int getAlive() {
+    int out = 0;
+    for (int i=0; i<Network.size(); i++){
+        if (Network.get(i).isUp()) {
+            out++;
+        }
+    }
+    return out;
+}
+
 /*============================================================================*/
 // methods
 /*============================================================================*/

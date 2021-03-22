@@ -5,7 +5,6 @@ import java.util.*;
 import peersim.cdsim.*;
 import peersim.config.Configuration;
 import peersim.core.*;
-import peersim.dynamics.WireKOut;
 
 public class IntCollectProtocol implements CDProtocol, HitsConfigurable, Deliverable, RequestHandler, PeerRecommender {
 

@@ -255,7 +255,7 @@ def analyze(param, hits, msgs, succs, hops):
     hit = mnr/dmn
     hits.append(hit)
     # msgs
-    dmn = param["config"]["netsize"] * reqnum
+    dmn = last["alive"] * reqnum
     mnr = sum(
         [
         msg["stat"]["totalSendControl"] + 
@@ -359,9 +359,9 @@ def runFig6to10():
         "netsize" : [10000],
         "kout": [10],
         "bc_msgnum" : [1],
-        "bc_schedule" : [",".join(map(str,range(5,1000,5)))],
-        "churn_schedule": ["1"],
-        "churn_percentage": list(map(str, range(0, 1, 5))),
+        "bc_schedule" : [",".join(map(str,range(1,1000)))],
+        "churn_schedule": ["0"],
+        "churn_percentage": list(map(str, range(0, 50, 5))),
         "qi_total" : [12],
         "conf_tpl": [
             "config-gossip-collect-query.txt",
@@ -436,7 +436,7 @@ def runFig11to15():
         "netsize" : [10000],
         "kout": [5,10,20,50,100,200,500,1000],
         "bc_msgnum" : [1],
-        "bc_schedule" : [",".join(map(str,range(5,1000,5)))],
+        "bc_schedule" : [",".join(map(str,range(1,1000)))],
         "churn_schedule": ["-1"],
         "churn_percentage": ["0"],
         "qi_total" : [12],
@@ -467,15 +467,15 @@ def runFig11to15():
     hops = reshapeAndGetMean(hops, len(degrees))
     effs = getEffs(hits,msgs, succs, hops)
     
-    fig6()
+    fig11()
     plt.plot(degrees, hits, color='r', linestyle="-", marker=".")
-    fig7()
+    fig12()
     plt.plot(degrees, msgs, color='r', linestyle="-", marker=".")
-    fig8()
+    fig13()
     plt.plot(degrees, succs, color='r', linestyle="-", marker=".")
-    fig9()
+    fig14()
     plt.plot(degrees, hops, color='r', linestyle="-", marker=".")
-    fig10()
+    fig15()
     plt.plot(degrees, effs, color='r', linestyle="-", marker=".")
     
     intbfsParams = run(configs, lambda param: param["config"]["conf_tpl"]=="config-int-collect-query.txt")
@@ -493,26 +493,25 @@ def runFig11to15():
     hops = reshapeAndGetMean(hops, len(degrees))
     effs = getEffs(hits,msgs, succs, hops)
 
-    fig6()
+    fig11()
     plt.plot(degrees, hits, color='g', linestyle="-", marker=".")
-    fig7()
+    fig12()
     plt.plot(degrees, msgs, color='g', linestyle="-", marker=".")
-    fig8()
+    fig13()
     plt.plot(degrees, succs, color='g', linestyle="-", marker=".")
-    fig9()
+    fig14()
     plt.plot(degrees, hops, color='g', linestyle="-", marker=".")
-    fig10()
+    fig15()
     plt.plot(degrees, effs, color='g', linestyle="-", marker=".")
 
 compile()
 
 for task in [
-    # runFig1to5,
+    runFig1to5,
     # runFig6to10,
-    runFig11to15,
+    # runFig11to15,
     ]:
     task()
 
 plt.show()
 cleanup()
-# %%
